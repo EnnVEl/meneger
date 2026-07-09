@@ -278,6 +278,18 @@
             background: none;
         }
 
+        .completed-row .completed-delete {
+            cursor: pointer;
+            opacity: 0.3;
+            transition: opacity 0.2s;
+            text-align: center;
+            font-size: 16px;
+        }
+
+        .completed-row .completed-delete:hover {
+            opacity: 1;
+        }
+
         .status-failed {
             color: #ff6b6b;
             text-align: center;
@@ -672,7 +684,6 @@
             background: rgba(255, 68, 68, 0.2);
         }
 
-        /* ЗАМЕТКИ */
         .notes-container {
             position: relative;
             flex: 1;
@@ -906,6 +917,7 @@
                                         <th>Задания</th>
                                         <th style="width: 100px;">Награда</th>
                                         <th style="width: 60px;">Статус</th>
+                                        <th style="width: 50px;"></th>
                                     </tr>
                                 </thead>
                                 <tbody id="completedBody"></tbody>
@@ -1215,6 +1227,9 @@
                     rowAttrs += ` draggable="true" oncontextmenu="openContextMenu(event, '${type}', ${index})"`;
                 }
                 
+                // Для завершённых заданий добавляем кнопку удаления
+                const deleteBtn = isCompleted ? `<td class="completed-delete" onclick="deleteCompletedTask(${index})">✕</td>` : '';
+                
                 html += `
                     <tr ${rowAttrs}>
                         ${!isCompleted ? `<td style="cursor: grab; text-align: center;">⠿</td>` : `<td style="text-align: center;">${index + 1}</td>`}
@@ -1222,6 +1237,7 @@
                         <td ${isCompleted ? '' : `ondblclick="editTask('${type}', ${index}, 'reward')"`}>${rewardDisplay}</td>
                         ${statusHtml}
                         ${deadlineHtml}
+                        ${deleteBtn}
                     </tr>
                 `;
             });
@@ -1244,6 +1260,19 @@
             if (!isCompleted) {
                 setupDragDrop(tbody, type);
                 setupLongPress(tbody, type);
+            }
+        }
+
+        // Функция удаления из завершённых заданий
+        function deleteCompletedTask(index) {
+            if (index >= 0 && index < data.completed.length) {
+                if (confirm('🗑️ Удалить это задание?')) {
+                    data.completed.splice(index, 1);
+                    saveData();
+                    updateAll();
+                    playClickSound();
+                    showNotification('✅ Задание удалено!');
+                }
             }
         }
 
@@ -1740,54 +1769,13 @@
             playClickSound();
         }
 
-        function setupCompletedLongPress() {
-            const container = document.getElementById('completedContainer');
-            if (!container) return;
-            
-            let timer = null;
-            let target = null;
-            
-            container.addEventListener('mousedown', function(e) {
-                const row = e.target.closest('.completed-row');
-                if (row) {
-                    target = row;
-                    timer = setTimeout(() => {
-                        if (target) {
-                            const index = parseInt(target.dataset.index);
-                            if (!isNaN(index) && index < data.completed.length) {
-                                if (confirm('🗑️ Удалить это задание?')) {
-                                    data.completed.splice(index, 1);
-                                    saveData();
-                                    updateAll();
-                                    playClickSound();
-                                    showNotification('✅ Задание удалено!');
-                                }
-                            }
-                            target = null;
-                        }
-                    }, 600);
-                }
-            });
-            
-            container.addEventListener('mouseup', function() {
-                clearTimeout(timer);
-                target = null;
-            });
-            
-            container.addEventListener('mouseleave', function() {
-                clearTimeout(timer);
-                target = null;
-            });
-        }
-
-        // ===== ЗАМЕТКИ - СВОБОДНОЕ ПЕРЕМЕЩЕНИЕ С ПЕРЕКРЫТИЕМ =====
+        // ===== ЗАМЕТКИ =====
         let noteDragData = null;
 
         function renderNotes() {
             const containers = document.querySelectorAll('.notes-container');
             containers.forEach(container => {
                 container.innerHTML = '';
-                // Сортируем заметки по z-index, чтобы последние были сверху
                 const sortedNotes = data.notes.map((note, i) => ({...note, index: i}));
                 sortedNotes.forEach((note, idx) => {
                     const div = document.createElement('div');
@@ -1805,14 +1793,12 @@
                         <div class="note-resize-handle" onmousedown="startNoteResize(event, ${note.index})"></div>
                     `;
                     
-                    // Перетаскивание заметок
                     let isDragging = false;
-                    let startX, startY, origX, origY, startZIndex;
+                    let startX, startY, origX, origY;
                     
                     div.addEventListener('mousedown', function(e) {
                         if (e.target.closest('.note-delete') || e.target.closest('.note-resize-handle') || e.target.tagName === 'TEXTAREA') return;
                         
-                        // Поднимаем заметку наверх при перетаскивании
                         const maxZ = Math.max(20, ...data.notes.map(n => n.zIndex || 5));
                         data.notes[note.index].zIndex = maxZ + 1;
                         div.style.zIndex = maxZ + 1;
@@ -2180,7 +2166,6 @@
             applySettings();
             updateAll();
             updateBalance();
-            setupCompletedLongPress();
             setupNotePanelResize();
             
             setTimeout(() => {
