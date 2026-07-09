@@ -292,15 +292,16 @@
             background: none;
         }
 
-        .completed-row .completed-delete {
+        .delete-btn {
             cursor: pointer;
             opacity: 0.3;
             transition: opacity 0.2s;
             text-align: center;
             font-size: 16px;
+            padding: 0 5px;
         }
 
-        .completed-row .completed-delete:hover {
+        .delete-btn:hover {
             opacity: 1;
         }
 
@@ -845,29 +846,8 @@
             opacity: 0.3;
         }
 
-        /* Мобильная версия - заметки в отдельной вкладке */
-        .is-mobile .notes-panel {
-            display: none !important;
-        }
-
-        .is-mobile .notes-tab-content {
-            display: none !important;
-        }
-
-        .is-mobile .notes-tab-content.active {
-            display: flex !important;
-        }
-
-        .is-mobile .notes-tab-btn {
-            display: flex !important;
-        }
-
         .notes-tab-btn {
             display: none;
-        }
-
-        .is-mobile .notes-tab-btn {
-            display: flex;
         }
 
         .notes-tab-content {
@@ -895,6 +875,16 @@
             flex-shrink: 0;
         }
 
+        /* Мобильная версия */
+        .is-mobile .notes-panel {
+            display: none !important;
+        }
+
+        .is-mobile .notes-tab-btn {
+            display: flex !important;
+        }
+
+        /* Адаптивность */
         @media (max-width: 768px) {
             .store-grid {
                 grid-template-columns: repeat(3, 1fr);
@@ -932,12 +922,15 @@
                 line-height: 24px;
             }
             .music-player button {
-                font-size: 16px;
-                padding: 4px 15px;
-                min-width: 45px;
+                font-size: 18px;
+                padding: 5px 18px;
+                min-width: 50px;
             }
             .notes-tab-btn {
                 display: flex !important;
+            }
+            .delete-btn {
+                font-size: 14px;
             }
         }
 
@@ -963,10 +956,17 @@
             .modal-content h2 {
                 font-size: 17px;
             }
+            .music-player button {
+                font-size: 16px;
+                padding: 4px 12px;
+                min-width: 40px;
+            }
+            .delete-btn {
+                font-size: 12px;
+            }
         }
 
         @media (pointer: coarse) {
-            /* Сенсорные устройства */
             .draggable-row {
                 cursor: default;
             }
@@ -1013,6 +1013,7 @@
                                         <th>Задания</th>
                                         <th style="width: 80px;">Награда</th>
                                         <th style="width: 50px;">Статус</th>
+                                        <th style="width: 30px;"></th>
                                     </tr>
                                 </thead>
                                 <tbody id="tasksBody"></tbody>
@@ -1041,7 +1042,7 @@
                                         <th>Задания</th>
                                         <th style="width: 80px;">Награда</th>
                                         <th style="width: 50px;">Статус</th>
-                                        <th style="width: 35px;"></th>
+                                        <th style="width: 30px;"></th>
                                     </tr>
                                 </thead>
                                 <tbody id="completedBody"></tbody>
@@ -1075,6 +1076,7 @@
                                         <th style="width: 80px;">Награда</th>
                                         <th style="width: 80px;">Статус</th>
                                         <th style="width: 120px;">Дедлайн</th>
+                                        <th style="width: 30px;"></th>
                                     </tr>
                                 </thead>
                                 <tbody id="tempBody"></tbody>
@@ -1092,8 +1094,11 @@
                 </div>
             </div>
 
-            <!-- Отдельная вкладка для заметок на мобильных -->
             <div id="notesTab" class="tab-content notes-tab-content">
+                <div class="notes-header">
+                    <h3>📝 Заметки</h3>
+                    <button class="add-note-btn" onclick="addNote()">+</button>
+                </div>
                 <div class="notes-container" id="notesContainerMobile"></div>
             </div>
         </div>
@@ -1123,7 +1128,7 @@
                 textColor: '#ffffff',
                 gradientColors: ['#2b2b2b', '#1a1a2e'],
                 bgImage: null,
-                musicVolume: 50,
+                musicVolume: 80,
                 soundEffects: true
             }
         };
@@ -1133,7 +1138,6 @@
         let isContextOpen = false;
         let isMobile = false;
 
-        // Определение мобильного устройства
         function checkMobile() {
             const isTouch = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
             const isMobileUA = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
@@ -1141,11 +1145,6 @@
             
             if (isMobile) {
                 document.getElementById('app').classList.add('is-mobile');
-                // Переключаем на вкладку заметок если она активна
-                const activeTab = document.querySelector('.tab-content.active');
-                if (activeTab && activeTab.id === 'tasksTab') {
-                    // Если активна вкладка заданий, показываем заметки в отдельной вкладке
-                }
             }
             return isMobile;
         }
@@ -1164,7 +1163,7 @@
                 gainNode.connect(audioContext.destination);
                 oscillator.frequency.value = 800;
                 oscillator.type = 'sine';
-                gainNode.gain.value = 0.08;
+                gainNode.gain.value = 0.12;
                 oscillator.start();
                 oscillator.stop(audioContext.currentTime + 0.05);
             } catch (e) {}
@@ -1215,7 +1214,7 @@
                     musicAudio = null;
                 }
                 musicAudio = new Audio(musicFiles[index]);
-                musicAudio.volume = data.settings.musicVolume / 100;
+                musicAudio.volume = Math.min(1, data.settings.musicVolume / 80);
                 musicAudio.addEventListener('ended', () => {
                     nextSong();
                 });
@@ -1263,7 +1262,7 @@
 
         function updateMusicVolume() {
             if (musicAudio) {
-                musicAudio.volume = data.settings.musicVolume / 100;
+                musicAudio.volume = Math.min(1, data.settings.musicVolume / 80);
             }
         }
 
@@ -1287,14 +1286,16 @@
                             textColor: '#ffffff',
                             gradientColors: ['#2b2b2b', '#1a1a2e'],
                             bgImage: null,
-                            musicVolume: 50,
+                            musicVolume: 80,
                             soundEffects: true
                         };
                     }
                     if (!data.settings.gradientColors) {
                         data.settings.gradientColors = ['#2b2b2b', '#1a1a2e'];
                     }
-                    // Если gradientColors пустой массив, сохраняем его как есть
+                    if (!data.settings.musicVolume) {
+                        data.settings.musicVolume = 80;
+                    }
                     applySettings();
                     updateAll();
                     updateBalance();
@@ -1375,7 +1376,7 @@
                     rowAttrs += ` draggable="true" oncontextmenu="openContextMenu(event, '${type}', ${index})"`;
                 }
                 
-                const deleteBtn = isCompleted ? `<td class="completed-delete" onclick="deleteCompletedTask(${index})">✕</td>` : '';
+                const deleteBtn = `<td class="delete-btn" onclick="deleteTask('${type}', ${index})">✕</td>`;
                 
                 html += `
                     <tr ${rowAttrs}>
@@ -1390,7 +1391,7 @@
             });
             
             if (showEmpty) {
-                const emptyCols = type === 'temp' ? 5 : 4;
+                const emptyCols = type === 'temp' ? 6 : 5;
                 const emptyClick = type === 'temp' ? `onclick="showTempTaskDialog(null)"` : `onclick="createTask('${type}')"`;
                 html += `
                     <tr class="empty-row" ${emptyClick}>
@@ -1410,16 +1411,23 @@
             }
         }
 
-        function deleteCompletedTask(index) {
-            if (index >= 0 && index < data.completed.length) {
-                if (confirm('🗑️ Удалить это задание?')) {
-                    data.completed.splice(index, 1);
-                    saveData();
-                    updateAll();
-                    playClickSound();
-                    showNotification('✅ Задание удалено!');
-                }
+        function deleteTask(type, index) {
+            if (type === 'tasks' && index >= 0 && index < data.tasks.length) {
+                data.tasks.splice(index, 1);
+                showNotification('✅ Задание удалено!');
+            } else if (type === 'completed' && index >= 0 && index < data.completed.length) {
+                data.completed.splice(index, 1);
+                showNotification('✅ Задание удалено!');
+            } else if (type === 'temp' && index >= 0 && index < data.tempTasks.length) {
+                data.tempTasks.splice(index, 1);
+                showNotification('✅ Задание удалено!');
+            } else if (type === 'store' && index >= 0 && index < data.store.length) {
+                data.store.splice(index, 1);
+                showNotification('✅ Задание удалено из магазина!');
             }
+            saveData();
+            updateAll();
+            playClickSound();
         }
 
         let longPressTimer = null;
@@ -1429,6 +1437,7 @@
             const rows = tbody.querySelectorAll('.draggable-row');
             rows.forEach(row => {
                 row.addEventListener('mousedown', function(e) {
+                    if (e.target.closest('.delete-btn')) return;
                     longPressTarget = { type, index: parseInt(this.dataset.index) };
                     longPressTimer = setTimeout(() => {
                         if (longPressTarget && !isContextOpen) {
@@ -1453,8 +1462,8 @@
                     }
                 });
                 
-                // Для сенсорных устройств
                 row.addEventListener('touchstart', function(e) {
+                    if (e.target.closest('.delete-btn')) return;
                     const touch = e.touches[0];
                     longPressTarget = { type, index: parseInt(this.dataset.index) };
                     longPressTimer = setTimeout(() => {
@@ -1523,25 +1532,11 @@
         function contextDelete() {
             const type = contextType;
             const index = contextIndex;
+            closeContextMenu();
             
             if (type && index !== null && index !== undefined) {
-                if (confirm('🗑️ Удалить это задание?')) {
-                    if (type === 'store') {
-                        data.store.splice(index, 1);
-                        showNotification('✅ Задание удалено!');
-                    } else if (type === 'tasks') {
-                        data.tasks.splice(index, 1);
-                        showNotification('✅ Задание удалено!');
-                    } else if (type === 'temp') {
-                        data.tempTasks.splice(index, 1);
-                        showNotification('✅ Задание удалено!');
-                    }
-                    saveData();
-                    updateAll();
-                    playClickSound();
-                }
+                deleteTask(type, index);
             }
-            closeContextMenu();
         }
 
         function showEditTaskDialog(type, index) {
@@ -1601,6 +1596,10 @@
             
             rows.forEach(row => {
                 row.addEventListener('dragstart', function(e) {
+                    if (e.target.closest('.delete-btn')) {
+                        e.preventDefault();
+                        return;
+                    }
                     dragData = { type, index: parseInt(this.dataset.index) };
                     this.classList.add('dragging');
                     e.dataTransfer.effectAllowed = 'move';
@@ -1817,6 +1816,7 @@
                         <div>${item.icon || '😊'}</div>
                         <div class="item-name">${item.name || 'Без названия'}</div>
                         <div class="item-cost">${costDisplay}</div>
+                        <div style="position:absolute; top:5px; right:10px; font-size:16px; opacity:0.4; cursor:pointer;" onclick="event.stopPropagation(); deleteTask('store', ${index})">✕</div>
                     </div>
                 `;
             });
@@ -2306,7 +2306,7 @@
                         textColor: '#ffffff',
                         gradientColors: ['#2b2b2b', '#1a1a2e'],
                         bgImage: null,
-                        musicVolume: 50,
+                        musicVolume: 80,
                         soundEffects: true
                     }
                 };
@@ -2337,10 +2337,8 @@
             
             if (tab === 'store') renderStore();
             if (tab === 'notes') {
-                // Для мобильной вкладки заметок обновляем контейнер
                 const mobileContainer = document.getElementById('notesContainerMobile');
                 if (mobileContainer) {
-                    // Рендерим заметки в мобильный контейнер
                     renderNotesMobile();
                 }
             }
@@ -2350,7 +2348,6 @@
         function renderNotesMobile() {
             const container = document.getElementById('notesContainerMobile');
             if (!container) return;
-            // Копируем заметки из основного контейнера
             const mainContainer = document.getElementById('notesContainer');
             if (mainContainer) {
                 container.innerHTML = mainContainer.innerHTML;
@@ -2411,12 +2408,10 @@
                 if (e.target === this) closeModal();
             });
             
-            // Адаптация под изменение размера окна
             window.addEventListener('resize', function() {
                 const wasMobile = isMobile;
                 checkMobile();
                 if (wasMobile !== isMobile) {
-                    // Переключаем вкладки если изменился тип устройства
                     updateAll();
                 }
             });
