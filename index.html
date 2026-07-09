@@ -35,7 +35,7 @@
             width: 100%;
             height: 100%;
             z-index: 0;
-            background: #2b2b2b;
+            background: var(--bg-color, #2b2b2b);
         }
 
         .gradient-layer {
@@ -705,7 +705,7 @@
 
         .note-item-free.dragging {
             opacity: 0.7;
-            z-index: 10;
+            z-index: 20;
             cursor: grabbing;
         }
 
@@ -733,6 +733,7 @@
             font-size: 14px;
             opacity: 0.5;
             padding: 2px 5px;
+            z-index: 25;
         }
 
         .note-item-free .note-delete:hover {
@@ -747,6 +748,7 @@
             height: 15px;
             cursor: nw-resize;
             opacity: 0.3;
+            z-index: 25;
         }
 
         .note-item-free .note-resize-handle:hover {
@@ -1141,8 +1143,7 @@
         }
 
         function applySettings() {
-            // Фон всегда #2b2b2b
-            document.getElementById('bgLayer').style.backgroundColor = '#2b2b2b';
+            document.getElementById('bgLayer').style.backgroundColor = data.settings.bgColor;
             
             const gradientLayer = document.getElementById('gradientLayer');
             if (data.settings.gradientColors && data.settings.gradientColors.length > 1) {
@@ -1209,7 +1210,6 @@
                 const deadlineHtml = type === 'temp' && task.deadline ? `<td>${task.deadline}</td>` : '';
                 const rewardDisplay = task.reward < 0 ? task.reward : `+${task.reward}`;
                 
-                // Для завершённых заданий убираем перетаскивание и контекстное меню
                 let rowAttrs = `class="${rowClass}" data-index="${index}" data-type="${type}"`;
                 if (!isCompleted) {
                     rowAttrs += ` draggable="true" oncontextmenu="openContextMenu(event, '${type}', ${index})"`;
@@ -1780,34 +1780,42 @@
             });
         }
 
-        // ===== ЗАМЕТКИ =====
+        // ===== ЗАМЕТКИ - СВОБОДНОЕ ПЕРЕМЕЩЕНИЕ С ПЕРЕКРЫТИЕМ =====
         let noteDragData = null;
 
         function renderNotes() {
             const containers = document.querySelectorAll('.notes-container');
             containers.forEach(container => {
                 container.innerHTML = '';
-                data.notes.forEach((note, index) => {
+                // Сортируем заметки по z-index, чтобы последние были сверху
+                const sortedNotes = data.notes.map((note, i) => ({...note, index: i}));
+                sortedNotes.forEach((note, idx) => {
                     const div = document.createElement('div');
                     div.className = 'note-item-free';
-                    div.dataset.index = index;
-                    div.style.left = (note.x || 10 + index * 15) + 'px';
-                    div.style.top = (note.y || 10 + index * 20) + 'px';
+                    div.dataset.index = note.index;
+                    div.style.left = (note.x || 10 + idx * 15) + 'px';
+                    div.style.top = (note.y || 10 + idx * 20) + 'px';
                     div.style.width = (note.width || 180) + 'px';
                     div.style.height = (note.height || 120) + 'px';
+                    div.style.zIndex = note.zIndex || 5 + idx;
                     div.innerHTML = `
-                        <button class="note-delete" onclick="deleteNote(${index})">✕</button>
-                        <textarea oninput="updateNoteText(${index}, this.value)" 
+                        <button class="note-delete" onclick="deleteNote(${note.index})">✕</button>
+                        <textarea oninput="updateNoteText(${note.index}, this.value)" 
                                   style="min-height: ${(note.height || 120) - 20}px;">${note.text || ''}</textarea>
-                        <div class="note-resize-handle" onmousedown="startNoteResize(event, ${index})"></div>
+                        <div class="note-resize-handle" onmousedown="startNoteResize(event, ${note.index})"></div>
                     `;
                     
                     // Перетаскивание заметок
                     let isDragging = false;
-                    let startX, startY, origX, origY;
+                    let startX, startY, origX, origY, startZIndex;
                     
                     div.addEventListener('mousedown', function(e) {
                         if (e.target.closest('.note-delete') || e.target.closest('.note-resize-handle') || e.target.tagName === 'TEXTAREA') return;
+                        
+                        // Поднимаем заметку наверх при перетаскивании
+                        const maxZ = Math.max(20, ...data.notes.map(n => n.zIndex || 5));
+                        data.notes[note.index].zIndex = maxZ + 1;
+                        div.style.zIndex = maxZ + 1;
                         
                         isDragging = true;
                         startX = e.clientX;
@@ -1815,7 +1823,6 @@
                         origX = parseInt(div.style.left);
                         origY = parseInt(div.style.top);
                         div.classList.add('dragging');
-                        div.style.zIndex = 10;
                         e.preventDefault();
                     });
                     
@@ -1828,9 +1835,9 @@
                         const newY = Math.max(0, Math.min(containerRect.height - parseInt(div.style.height) || 120, origY + dy));
                         div.style.left = newX + 'px';
                         div.style.top = newY + 'px';
-                        if (index < data.notes.length) {
-                            data.notes[index].x = newX;
-                            data.notes[index].y = newY;
+                        if (note.index < data.notes.length) {
+                            data.notes[note.index].x = newX;
+                            data.notes[note.index].y = newY;
                         }
                     });
                     
@@ -1838,7 +1845,6 @@
                         if (isDragging) {
                             isDragging = false;
                             div.classList.remove('dragging');
-                            div.style.zIndex = 5;
                             saveData();
                         }
                     });
@@ -1851,12 +1857,14 @@
         function addNote() {
             const maxX = Math.max(0, ...data.notes.map(n => n.x || 0));
             const maxY = Math.max(0, ...data.notes.map(n => n.y || 0));
+            const maxZ = Math.max(5, ...data.notes.map(n => n.zIndex || 5));
             data.notes.push({ 
                 text: 'Новая заметка...', 
                 x: maxX + 20, 
                 y: maxY + 20, 
                 width: 180, 
-                height: 120 
+                height: 120,
+                zIndex: maxZ + 1
             });
             saveData();
             renderNotes();
@@ -1954,6 +1962,13 @@
                 <h2>⚙️ Настройки</h2>
                 
                 <div class="settings-group">
+                    <label>Цвет фона:</label>
+                    <div class="color-picker">
+                        <input type="color" id="bgColor" value="${data.settings.bgColor}">
+                    </div>
+                </div>
+                
+                <div class="settings-group">
                     <label>Цвет текста:</label>
                     <div class="color-picker">
                         <input type="color" id="textColor" value="${data.settings.textColor}">
@@ -2006,6 +2021,7 @@
         }
 
         function saveSettings() {
+            data.settings.bgColor = document.getElementById('bgColor').value;
             data.settings.textColor = document.getElementById('textColor').value;
             
             const colorInputs = document.querySelectorAll('#gradientColors input[type="color"]');
