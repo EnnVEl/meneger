@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Менеджер заданий</title>
     <style>
         * {
@@ -10,6 +10,7 @@
             padding: 0;
             box-sizing: border-box;
             user-select: none;
+            -webkit-tap-highlight-color: transparent;
         }
 
         body {
@@ -17,6 +18,7 @@
             height: 100vh;
             overflow: hidden;
             background: #2b2b2b;
+            touch-action: manipulation;
         }
 
         #app {
@@ -80,6 +82,7 @@
             backdrop-filter: blur(10px);
             border-radius: 10px;
             margin-bottom: 10px;
+            flex-shrink: 0;
         }
 
         .balance {
@@ -109,6 +112,7 @@
             gap: 15px;
             padding: 8px;
             margin-bottom: 10px;
+            flex-shrink: 0;
         }
 
         .music-player button {
@@ -133,6 +137,7 @@
             gap: 5px;
             margin-bottom: 10px;
             flex-wrap: wrap;
+            flex-shrink: 0;
         }
 
         .tab-btn {
@@ -166,6 +171,7 @@
             border-radius: 0 0 10px 10px;
             overflow: hidden;
             padding: 10px;
+            min-height: 0;
         }
 
         .tab-content.active {
@@ -178,6 +184,7 @@
             gap: 10px;
             overflow: hidden;
             position: relative;
+            min-height: 0;
         }
 
         .table-wrapper {
@@ -187,6 +194,7 @@
             overflow: hidden;
             min-width: 0;
             position: relative;
+            min-height: 0;
         }
 
         .table-container {
@@ -196,12 +204,14 @@
             border-radius: 8px;
             position: relative;
             border: 1px solid rgba(255, 255, 255, 0.05);
+            min-height: 0;
         }
 
         table {
             width: 100%;
             border-collapse: collapse;
             color: var(--text-color, #ffffff);
+            font-size: 14px;
         }
 
         thead {
@@ -213,16 +223,20 @@
         }
 
         th {
-            padding: 10px;
+            padding: 8px 10px;
             text-align: left;
             border-bottom: 2px solid var(--text-color, #ffffff);
             background: rgba(0, 0, 0, 0.3);
+            font-size: 13px;
+            white-space: nowrap;
         }
 
         td {
-            padding: 10px;
+            padding: 8px 10px;
             border-bottom: 1px solid rgba(255, 255, 255, 0.08);
             cursor: default;
+            font-size: 13px;
+            word-break: break-word;
         }
 
         .draggable-row {
@@ -243,13 +257,13 @@
 
         .status-checkbox {
             cursor: pointer;
-            font-size: 20px;
+            font-size: 18px;
             text-align: center;
-            padding: 5px;
+            padding: 3px;
             display: inline-block;
-            width: 30px;
-            height: 30px;
-            line-height: 30px;
+            width: 28px;
+            height: 28px;
+            line-height: 28px;
             text-align: center;
             border-radius: 4px;
             transition: background 0.2s;
@@ -293,20 +307,20 @@
         .status-failed {
             color: #ff6b6b;
             text-align: center;
-            font-size: 20px;
+            font-size: 18px;
         }
 
         .status-buttons {
             display: flex;
-            gap: 8px;
+            gap: 5px;
             justify-content: center;
             align-items: center;
         }
 
         .status-btn {
             cursor: pointer;
-            font-size: 20px;
-            padding: 2px 8px;
+            font-size: 18px;
+            padding: 2px 6px;
             border-radius: 4px;
             transition: background 0.2s;
             display: inline-block;
@@ -384,6 +398,7 @@
             z-index: 1000;
             justify-content: center;
             align-items: center;
+            padding: 20px;
         }
 
         .modal.active {
@@ -393,24 +408,27 @@
         .modal-content {
             background: rgba(20, 20, 30, 0.95);
             backdrop-filter: blur(10px);
-            padding: 30px;
+            padding: 25px;
             border-radius: 12px;
-            min-width: 300px;
+            min-width: 280px;
             max-width: 500px;
             border: 1px solid var(--text-color, #ffffff);
             color: var(--text-color, #ffffff);
             max-height: 90vh;
             overflow-y: auto;
+            width: 100%;
         }
 
         .modal-content h2 {
-            margin-bottom: 20px;
+            margin-bottom: 15px;
             text-align: center;
+            font-size: 20px;
         }
 
         .modal-content label {
             display: block;
-            margin: 10px 0 5px;
+            margin: 8px 0 4px;
+            font-size: 14px;
         }
 
         .modal-content input,
@@ -428,19 +446,20 @@
         .modal-content .buttons {
             display: flex;
             gap: 10px;
-            margin-top: 20px;
+            margin-top: 15px;
             justify-content: flex-end;
             flex-wrap: wrap;
         }
 
         .modal-content .buttons button {
-            padding: 8px 20px;
+            padding: 8px 18px;
             border: 1px solid var(--text-color, #ffffff);
             border-radius: 5px;
             cursor: pointer;
             transition: all 0.3s;
             background: rgba(255, 255, 255, 0.1);
             color: var(--text-color, #ffffff);
+            font-size: 14px;
         }
 
         .modal-content .buttons .btn-primary {
@@ -467,7 +486,7 @@
         }
 
         .settings-group {
-            margin: 15px 0;
+            margin: 12px 0;
         }
 
         .color-picker {
@@ -602,7 +621,7 @@
             top: 20px;
             left: 50%;
             transform: translateX(-50%);
-            padding: 15px 30px;
+            padding: 12px 25px;
             background: rgba(0, 0, 0, 0.9);
             backdrop-filter: blur(10px);
             border: 2px solid var(--text-color, #ffffff);
@@ -612,6 +631,8 @@
             animation: slideDown 0.3s ease;
             max-width: 90%;
             color: var(--text-color, #ffffff);
+            font-size: 14px;
+            text-align: center;
         }
 
         .notification.show {
@@ -656,7 +677,7 @@
             border-radius: 8px;
             padding: 5px 0;
             z-index: 3000;
-            min-width: 180px;
+            min-width: 160px;
             box-shadow: 0 10px 30px rgba(0,0,0,0.5);
         }
 
@@ -665,7 +686,7 @@
         }
 
         .context-menu-item {
-            padding: 10px 20px;
+            padding: 10px 18px;
             cursor: pointer;
             transition: background 0.3s;
             color: var(--text-color, #ffffff);
@@ -684,10 +705,11 @@
             background: rgba(255, 68, 68, 0.2);
         }
 
+        /* ЗАМЕТКИ */
         .notes-container {
             position: relative;
             flex: 1;
-            min-height: 300px;
+            min-height: 200px;
             background: rgba(0, 0, 0, 0.15);
             border-radius: 8px;
             border: 1px solid rgba(255, 255, 255, 0.05);
@@ -700,7 +722,7 @@
             backdrop-filter: blur(5px);
             border-radius: 8px;
             padding: 8px;
-            min-width: 120px;
+            min-width: 100px;
             min-height: 50px;
             border: 1px solid rgba(255, 255, 255, 0.08);
             cursor: grab;
@@ -727,8 +749,8 @@
             color: var(--text-color, #ffffff);
             resize: none;
             font-family: inherit;
-            font-size: 14px;
-            min-height: 40px;
+            font-size: 13px;
+            min-height: 35px;
             outline: none;
             padding: 5px;
         }
@@ -770,23 +792,24 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 10px;
+            padding: 8px 12px;
             background: rgba(0, 0, 0, 0.2);
             border-radius: 8px 8px 0 0;
+            flex-shrink: 0;
         }
 
         .notes-header h3 {
-            font-size: 16px;
+            font-size: 15px;
         }
 
         .add-note-btn {
             background: none;
             border: 1px solid var(--text-color, #ffffff);
             color: var(--text-color, #ffffff);
-            padding: 5px 15px;
+            padding: 5px 12px;
             border-radius: 5px;
             cursor: pointer;
-            font-size: 14px;
+            font-size: 13px;
         }
 
         .add-note-btn:hover {
@@ -795,15 +818,16 @@
         }
 
         .notes-panel {
-            width: 350px;
-            min-width: 250px;
-            max-width: 600px;
+            width: 320px;
+            min-width: 200px;
+            max-width: 500px;
             display: flex;
             flex-direction: column;
             background: rgba(0, 0, 0, 0.2);
             border-radius: 10px;
             border: 1px solid rgba(255, 255, 255, 0.05);
             overflow: hidden;
+            flex-shrink: 0;
         }
 
         .notes-panel .resize-handle {
@@ -821,24 +845,99 @@
             opacity: 0.3;
         }
 
+        /* Мобильная версия - заметки в отдельной вкладке */
+        .is-mobile .notes-panel {
+            display: none !important;
+        }
+
+        .is-mobile .notes-tab-content {
+            display: none !important;
+        }
+
+        .is-mobile .notes-tab-content.active {
+            display: flex !important;
+        }
+
+        .is-mobile .notes-tab-btn {
+            display: flex !important;
+        }
+
+        .notes-tab-btn {
+            display: none;
+        }
+
+        .is-mobile .notes-tab-btn {
+            display: flex;
+        }
+
+        .notes-tab-content {
+            display: none;
+            flex: 1;
+            flex-direction: column;
+            gap: 10px;
+            background: rgba(0, 0, 0, 0.15);
+            backdrop-filter: blur(5px);
+            border-radius: 0 0 10px 10px;
+            overflow: hidden;
+            padding: 10px;
+        }
+
+        .notes-tab-content.active {
+            display: flex;
+        }
+
+        .notes-tab-content .notes-container {
+            flex: 1;
+            min-height: 300px;
+        }
+
+        .notes-tab-content .notes-header {
+            flex-shrink: 0;
+        }
+
         @media (max-width: 768px) {
             .store-grid {
                 grid-template-columns: repeat(3, 1fr);
             }
             .tab-btn {
-                font-size: 12px;
+                font-size: 11px;
                 padding: 8px 10px;
-                min-width: 60px;
+                min-width: 50px;
             }
             .modal-content {
-                margin: 20px;
+                margin: 10px;
                 min-width: auto;
+                padding: 20px;
             }
             .notes-panel {
                 display: none !important;
             }
             .main-layout {
                 flex-direction: column;
+            }
+            .top-panel {
+                padding: 8px 15px;
+            }
+            .balance {
+                font-size: 16px;
+            }
+            th, td {
+                padding: 6px 8px;
+                font-size: 12px;
+            }
+            .status-checkbox {
+                font-size: 16px;
+                width: 24px;
+                height: 24px;
+                line-height: 24px;
+            }
+            .music-player button {
+                font-size: 16px;
+                padding: 4px 15px;
+                min-width: 45px;
+            }
+            .notes-tab-btn {
+                display: flex !important;
             }
         }
 
@@ -847,8 +946,32 @@
                 grid-template-columns: repeat(2, 1fr);
             }
             .top-panel {
-                flex-direction: column;
-                gap: 10px;
+                flex-direction: row;
+                gap: 5px;
+            }
+            .tabs {
+                gap: 3px;
+            }
+            .tab-btn {
+                font-size: 10px;
+                padding: 6px 8px;
+                min-width: 40px;
+            }
+            .modal-content {
+                padding: 15px;
+            }
+            .modal-content h2 {
+                font-size: 17px;
+            }
+        }
+
+        @media (pointer: coarse) {
+            /* Сенсорные устройства */
+            .draggable-row {
+                cursor: default;
+            }
+            .draggable-row:active {
+                cursor: default;
             }
         }
     </style>
@@ -871,11 +994,12 @@
                 <button onclick="nextSong()">⏭</button>
             </div>
 
-            <div class="tabs">
+            <div class="tabs" id="mainTabs">
                 <button class="tab-btn active" data-tab="tasks" onclick="switchTab('tasks')">📋 Задания</button>
                 <button class="tab-btn" data-tab="completed" onclick="switchTab('completed')">✅ Завершённые</button>
                 <button class="tab-btn" data-tab="store" onclick="switchTab('store')">🏪 Магазин</button>
                 <button class="tab-btn" data-tab="temp" onclick="switchTab('temp')">⏰ Временные</button>
+                <button class="tab-btn notes-tab-btn" data-tab="notes" onclick="switchTab('notes')">📝 Заметки</button>
             </div>
 
             <div id="tasksTab" class="tab-content active">
@@ -885,10 +1009,10 @@
                             <table id="tasksTable">
                                 <thead>
                                     <tr>
-                                        <th style="width: 30px;">#</th>
+                                        <th style="width: 25px;">#</th>
                                         <th>Задания</th>
-                                        <th style="width: 100px;">Награда</th>
-                                        <th style="width: 60px;">Статус</th>
+                                        <th style="width: 80px;">Награда</th>
+                                        <th style="width: 50px;">Статус</th>
                                     </tr>
                                 </thead>
                                 <tbody id="tasksBody"></tbody>
@@ -913,11 +1037,11 @@
                             <table id="completedTable">
                                 <thead>
                                     <tr>
-                                        <th style="width: 30px;">#</th>
+                                        <th style="width: 25px;">#</th>
                                         <th>Задания</th>
-                                        <th style="width: 100px;">Награда</th>
-                                        <th style="width: 60px;">Статус</th>
-                                        <th style="width: 50px;"></th>
+                                        <th style="width: 80px;">Награда</th>
+                                        <th style="width: 50px;">Статус</th>
+                                        <th style="width: 35px;"></th>
                                     </tr>
                                 </thead>
                                 <tbody id="completedBody"></tbody>
@@ -946,11 +1070,11 @@
                             <table id="tempTable">
                                 <thead>
                                     <tr>
-                                        <th style="width: 30px;">#</th>
+                                        <th style="width: 25px;">#</th>
                                         <th>Задания</th>
-                                        <th style="width: 100px;">Награда</th>
-                                        <th style="width: 100px;">Статус</th>
-                                        <th style="width: 150px;">Дедлайн</th>
+                                        <th style="width: 80px;">Награда</th>
+                                        <th style="width: 80px;">Статус</th>
+                                        <th style="width: 120px;">Дедлайн</th>
                                     </tr>
                                 </thead>
                                 <tbody id="tempBody"></tbody>
@@ -966,6 +1090,11 @@
                         <div class="notes-container" id="notesContainer3"></div>
                     </div>
                 </div>
+            </div>
+
+            <!-- Отдельная вкладка для заметок на мобильных -->
+            <div id="notesTab" class="tab-content notes-tab-content">
+                <div class="notes-container" id="notesContainerMobile"></div>
             </div>
         </div>
     </div>
@@ -1002,6 +1131,24 @@
         let contextType = null;
         let contextIndex = null;
         let isContextOpen = false;
+        let isMobile = false;
+
+        // Определение мобильного устройства
+        function checkMobile() {
+            const isTouch = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+            const isMobileUA = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+            isMobile = isTouch || isMobileUA || window.innerWidth < 768;
+            
+            if (isMobile) {
+                document.getElementById('app').classList.add('is-mobile');
+                // Переключаем на вкладку заметок если она активна
+                const activeTab = document.querySelector('.tab-content.active');
+                if (activeTab && activeTab.id === 'tasksTab') {
+                    // Если активна вкладка заданий, показываем заметки в отдельной вкладке
+                }
+            }
+            return isMobile;
+        }
 
         let audioContext = null;
 
@@ -1144,9 +1291,10 @@
                             soundEffects: true
                         };
                     }
-                    if (!data.settings.gradientColors || data.settings.gradientColors.length === 0) {
+                    if (!data.settings.gradientColors) {
                         data.settings.gradientColors = ['#2b2b2b', '#1a1a2e'];
                     }
+                    // Если gradientColors пустой массив, сохраняем его как есть
                     applySettings();
                     updateAll();
                     updateBalance();
@@ -1201,7 +1349,7 @@
                     if (task.status === 'failed') {
                         statusHtml = `<td class="status-failed">❌</td>`;
                     } else if (task.status === true) {
-                        statusHtml = `<td style="text-align:center; font-size:20px;">✅</td>`;
+                        statusHtml = `<td style="text-align:center; font-size:18px;">✅</td>`;
                     } else {
                         statusHtml = `
                             <td>
@@ -1227,7 +1375,6 @@
                     rowAttrs += ` draggable="true" oncontextmenu="openContextMenu(event, '${type}', ${index})"`;
                 }
                 
-                // Для завершённых заданий добавляем кнопку удаления
                 const deleteBtn = isCompleted ? `<td class="completed-delete" onclick="deleteCompletedTask(${index})">✕</td>` : '';
                 
                 html += `
@@ -1263,7 +1410,6 @@
             }
         }
 
-        // Функция удаления из завершённых заданий
         function deleteCompletedTask(index) {
             if (index >= 0 && index < data.completed.length) {
                 if (confirm('🗑️ Удалить это задание?')) {
@@ -1306,6 +1452,31 @@
                         longPressTarget = null;
                     }
                 });
+                
+                // Для сенсорных устройств
+                row.addEventListener('touchstart', function(e) {
+                    const touch = e.touches[0];
+                    longPressTarget = { type, index: parseInt(this.dataset.index) };
+                    longPressTimer = setTimeout(() => {
+                        if (longPressTarget && !isContextOpen) {
+                            isContextOpen = true;
+                            openContextMenu({ clientX: touch.clientX, clientY: touch.clientY, preventDefault: () => {} }, longPressTarget.type, longPressTarget.index);
+                            longPressTarget = null;
+                        }
+                    }, 600);
+                }, { passive: true });
+                
+                row.addEventListener('touchend', function() {
+                    clearTimeout(longPressTimer);
+                    if (!isContextOpen) {
+                        longPressTarget = null;
+                    }
+                }, { passive: true });
+                
+                row.addEventListener('touchcancel', function() {
+                    clearTimeout(longPressTimer);
+                    longPressTarget = null;
+                }, { passive: true });
             });
         }
 
@@ -1316,14 +1487,14 @@
             contextType = type;
             contextIndex = index;
             
-            let x = event.clientX;
-            let y = event.clientY;
+            let x = event.clientX || 0;
+            let y = event.clientY || 0;
             
-            if (x + 200 > window.innerWidth) x = window.innerWidth - 200;
+            if (x + 180 > window.innerWidth) x = window.innerWidth - 180;
             if (y + 100 > window.innerHeight) y = window.innerHeight - 100;
             
-            menu.style.left = x + 'px';
-            menu.style.top = y + 'px';
+            menu.style.left = Math.max(10, x) + 'px';
+            menu.style.top = Math.max(10, y) + 'px';
             menu.classList.add('active');
             isContextOpen = true;
         }
@@ -1661,20 +1832,32 @@
             const items = grid.querySelectorAll('.store-item:not(.add-btn)');
             items.forEach((item, index) => {
                 let timer = null;
-                item.addEventListener('mousedown', function(e) {
+                const startLongPress = function(e) {
                     timer = setTimeout(() => {
                         if (!isContextOpen) {
                             isContextOpen = true;
                             openContextMenu(e, 'store', index);
                         }
                     }, 600);
-                });
-                item.addEventListener('mouseup', function() {
+                };
+                const endLongPress = function() {
                     clearTimeout(timer);
-                });
-                item.addEventListener('mouseleave', function() {
-                    clearTimeout(timer);
-                });
+                };
+                
+                item.addEventListener('mousedown', startLongPress);
+                item.addEventListener('mouseup', endLongPress);
+                item.addEventListener('mouseleave', endLongPress);
+                item.addEventListener('touchstart', function(e) {
+                    const touch = e.touches[0];
+                    timer = setTimeout(() => {
+                        if (!isContextOpen) {
+                            isContextOpen = true;
+                            openContextMenu({ clientX: touch.clientX, clientY: touch.clientY, preventDefault: () => {} }, 'store', index);
+                        }
+                    }, 600);
+                }, { passive: true });
+                item.addEventListener('touchend', endLongPress, { passive: true });
+                item.addEventListener('touchcancel', endLongPress, { passive: true });
             });
         }
 
@@ -1796,7 +1979,7 @@
                     let isDragging = false;
                     let startX, startY, origX, origY;
                     
-                    div.addEventListener('mousedown', function(e) {
+                    const startDrag = function(e) {
                         if (e.target.closest('.note-delete') || e.target.closest('.note-resize-handle') || e.target.tagName === 'TEXTAREA') return;
                         
                         const maxZ = Math.max(20, ...data.notes.map(n => n.zIndex || 5));
@@ -1804,18 +1987,22 @@
                         div.style.zIndex = maxZ + 1;
                         
                         isDragging = true;
-                        startX = e.clientX;
-                        startY = e.clientY;
+                        const clientX = e.clientX || e.touches?.[0]?.clientX || 0;
+                        const clientY = e.clientY || e.touches?.[0]?.clientY || 0;
+                        startX = clientX;
+                        startY = clientY;
                         origX = parseInt(div.style.left);
                         origY = parseInt(div.style.top);
                         div.classList.add('dragging');
-                        e.preventDefault();
-                    });
+                        e.preventDefault?.();
+                    };
                     
-                    document.addEventListener('mousemove', function(e) {
+                    const moveDrag = function(e) {
                         if (!isDragging) return;
-                        const dx = e.clientX - startX;
-                        const dy = e.clientY - startY;
+                        const clientX = e.clientX || e.touches?.[0]?.clientX || 0;
+                        const clientY = e.clientY || e.touches?.[0]?.clientY || 0;
+                        const dx = clientX - startX;
+                        const dy = clientY - startY;
                         const containerRect = container.getBoundingClientRect();
                         const newX = Math.max(0, Math.min(containerRect.width - parseInt(div.style.width) || 180, origX + dx));
                         const newY = Math.max(0, Math.min(containerRect.height - parseInt(div.style.height) || 120, origY + dy));
@@ -1825,15 +2012,23 @@
                             data.notes[note.index].x = newX;
                             data.notes[note.index].y = newY;
                         }
-                    });
+                    };
                     
-                    document.addEventListener('mouseup', function() {
+                    const endDrag = function() {
                         if (isDragging) {
                             isDragging = false;
                             div.classList.remove('dragging');
                             saveData();
                         }
-                    });
+                    };
+                    
+                    div.addEventListener('mousedown', startDrag);
+                    document.addEventListener('mousemove', moveDrag);
+                    document.addEventListener('mouseup', endDrag);
+                    
+                    div.addEventListener('touchstart', startDrag, { passive: true });
+                    document.addEventListener('touchmove', moveDrag, { passive: true });
+                    document.addEventListener('touchend', endDrag, { passive: true });
                     
                     container.appendChild(div);
                 });
@@ -1876,14 +2071,16 @@
             event.preventDefault();
             event.stopPropagation();
             const note = event.target.closest('.note-item-free');
-            const startX = event.clientX;
-            const startY = event.clientY;
+            const startX = event.clientX || event.touches?.[0]?.clientX || 0;
+            const startY = event.clientY || event.touches?.[0]?.clientY || 0;
             const startWidth = parseInt(note.style.width) || 180;
             const startHeight = parseInt(note.style.height) || 120;
             
             function onMove(e) {
-                const newWidth = Math.max(100, startWidth + (e.clientX - startX));
-                const newHeight = Math.max(50, startHeight + (e.clientY - startY));
+                const clientX = e.clientX || e.touches?.[0]?.clientX || 0;
+                const clientY = e.clientY || e.touches?.[0]?.clientY || 0;
+                const newWidth = Math.max(100, startWidth + (clientX - startX));
+                const newHeight = Math.max(50, startHeight + (clientY - startY));
                 note.style.width = newWidth + 'px';
                 note.style.height = newHeight + 'px';
                 if (index < data.notes.length) {
@@ -1895,11 +2092,15 @@
             function onUp() {
                 document.removeEventListener('mousemove', onMove);
                 document.removeEventListener('mouseup', onUp);
+                document.removeEventListener('touchmove', onMove);
+                document.removeEventListener('touchend', onUp);
                 saveData();
             }
             
             document.addEventListener('mousemove', onMove);
             document.addEventListener('mouseup', onUp);
+            document.addEventListener('touchmove', onMove, { passive: true });
+            document.addEventListener('touchend', onUp, { passive: true });
         }
 
         function setupNotePanelResize() {
@@ -1912,7 +2113,7 @@
                     const startWidth = panel.offsetWidth;
                     
                     function onMove(ev) {
-                        const newWidth = Math.max(250, Math.min(600, startWidth + (startX - ev.clientX)));
+                        const newWidth = Math.max(200, Math.min(500, startWidth + (startX - ev.clientX)));
                         panel.style.width = newWidth + 'px';
                     }
                     
@@ -1931,7 +2132,7 @@
             const modal = document.getElementById('modal');
             const content = document.getElementById('modalContent');
             
-            const gradientColors = data.settings.gradientColors || ['#2b2b2b', '#1a1a2e'];
+            const gradientColors = data.settings.gradientColors || [];
             let gradientHtml = '';
             if (gradientColors.length > 0) {
                 gradientHtml = gradientColors.map((color, i) => `
@@ -2123,11 +2324,37 @@
             document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
             document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
             
-            document.getElementById(tab + 'Tab').classList.add('active');
-            document.querySelector(`.tab-btn[data-tab="${tab}"]`).classList.add('active');
+            const tabId = tab + 'Tab';
+            const tabElement = document.getElementById(tabId);
+            if (tabElement) {
+                tabElement.classList.add('active');
+            }
+            
+            const btn = document.querySelector(`.tab-btn[data-tab="${tab}"]`);
+            if (btn) {
+                btn.classList.add('active');
+            }
             
             if (tab === 'store') renderStore();
+            if (tab === 'notes') {
+                // Для мобильной вкладки заметок обновляем контейнер
+                const mobileContainer = document.getElementById('notesContainerMobile');
+                if (mobileContainer) {
+                    // Рендерим заметки в мобильный контейнер
+                    renderNotesMobile();
+                }
+            }
             playClickSound();
+        }
+
+        function renderNotesMobile() {
+            const container = document.getElementById('notesContainerMobile');
+            if (!container) return;
+            // Копируем заметки из основного контейнера
+            const mainContainer = document.getElementById('notesContainer');
+            if (mainContainer) {
+                container.innerHTML = mainContainer.innerHTML;
+            }
         }
 
         function updateAll() {
@@ -2136,6 +2363,7 @@
             renderTemp();
             renderStore();
             renderNotes();
+            renderNotesMobile();
         }
 
         function updateBalance() {
@@ -2162,6 +2390,7 @@
         }
 
         function init() {
+            checkMobile();
             loadData();
             applySettings();
             updateAll();
@@ -2180,6 +2409,16 @@
             
             document.getElementById('modal').addEventListener('click', function(e) {
                 if (e.target === this) closeModal();
+            });
+            
+            // Адаптация под изменение размера окна
+            window.addEventListener('resize', function() {
+                const wasMobile = isMobile;
+                checkMobile();
+                if (wasMobile !== isMobile) {
+                    // Переключаем вкладки если изменился тип устройства
+                    updateAll();
+                }
             });
         }
 
