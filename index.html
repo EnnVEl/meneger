@@ -24,34 +24,55 @@
             flex-direction: column;
             height: 100vh;
             padding: 10px;
-            background: var(--bg-color, #2b2b2b);
             color: var(--text-color, #ffffff);
-            background-image: var(--bg-image, none);
-            background-size: cover;
-            background-position: center;
+            position: relative;
         }
 
-        /* Градиентный фон */
-        .gradient-overlay {
+        /* Фон */
+        .bg-layer {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            pointer-events: none;
             z-index: 0;
+            background: var(--bg-color, #2b2b2b);
+        }
+
+        .gradient-layer {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
             background: var(--gradient, none);
+            pointer-events: none;
+        }
+
+        .image-layer {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 2;
+            background-size: cover;
+            background-position: center;
+            background-image: var(--bg-image, none);
+            pointer-events: none;
+            opacity: 0.8;
         }
 
         .app-content {
             position: relative;
-            z-index: 1;
+            z-index: 3;
             display: flex;
             flex-direction: column;
             height: 100vh;
         }
 
-        /* Верхняя панель - прозрачная */
+        /* Верхняя панель */
         .top-panel {
             display: flex;
             justify-content: space-between;
@@ -84,7 +105,7 @@
             background: rgba(255, 255, 255, 0.1);
         }
 
-        /* Музыкальный плеер - только обводка */
+        /* Музыкальный плеер */
         .music-player {
             display: flex;
             justify-content: center;
@@ -156,7 +177,7 @@
             display: flex;
         }
 
-        /* Основной контейнер с таблицей и заметками */
+        /* Основной контейнер */
         .main-layout {
             display: flex;
             flex: 1;
@@ -170,6 +191,7 @@
             flex-direction: column;
             overflow: hidden;
             min-width: 0;
+            position: relative;
         }
 
         .table-container {
@@ -180,10 +202,42 @@
             position: relative;
         }
 
-        /* Заметки справа */
+        /* Стрелочки навигации - статичные справа */
+        .table-nav {
+            display: flex;
+            flex-direction: column;
+            position: absolute;
+            right: 5px;
+            bottom: 5px;
+            gap: 3px;
+            z-index: 10;
+        }
+
+        .table-nav button {
+            width: 36px;
+            height: 28px;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(5px);
+            border: 1px solid var(--text-color, #ffffff);
+            color: var(--text-color, #ffffff);
+            cursor: pointer;
+            border-radius: 3px;
+            font-size: 14px;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .table-nav button:hover {
+            background: var(--text-color, #ffffff);
+            color: var(--bg-color, #2b2b2b);
+        }
+
+        /* Заметки - стикеры */
         .notes-panel {
             width: 300px;
-            min-width: 200px;
+            min-width: 150px;
             max-width: 500px;
             background: rgba(0, 0, 0, 0.3);
             backdrop-filter: blur(5px);
@@ -192,8 +246,8 @@
             display: flex;
             flex-direction: column;
             overflow: hidden;
-            resize: horizontal;
             position: relative;
+            transition: width 0.1s;
         }
 
         .notes-panel .resize-handle {
@@ -243,16 +297,34 @@
             display: flex;
             flex-direction: column;
             gap: 8px;
+            padding: 5px;
+            min-height: 100px;
+            position: relative;
         }
 
         .note-item {
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 5px;
-            padding: 10px;
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(5px);
+            border-radius: 8px;
+            padding: 8px;
             position: relative;
             min-height: 50px;
-            resize: vertical;
-            overflow: auto;
+            cursor: move;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .note-item:hover {
+            border-color: var(--text-color, #ffffff);
+        }
+
+        .note-item.dragging {
+            opacity: 0.5;
+            transform: scale(0.95);
+        }
+
+        .note-item.drag-over {
+            border-color: var(--text-color, #ffffff);
+            background: rgba(255, 255, 255, 0.25);
         }
 
         .note-item textarea {
@@ -260,11 +332,12 @@
             background: transparent;
             border: none;
             color: var(--text-color, #ffffff);
-            resize: vertical;
+            resize: none;
             font-family: inherit;
             font-size: 14px;
             min-height: 40px;
             outline: none;
+            padding: 5px;
         }
 
         .note-item .note-delete {
@@ -275,25 +348,26 @@
             border: none;
             color: var(--text-color, #ffffff);
             cursor: pointer;
-            font-size: 16px;
+            font-size: 14px;
             opacity: 0.5;
+            padding: 2px 5px;
         }
 
         .note-item .note-delete:hover {
             opacity: 1;
         }
 
-        .note-item .note-resize {
+        .note-item .note-resize-handle {
             position: absolute;
             bottom: 0;
             right: 0;
-            width: 20px;
-            height: 20px;
+            width: 15px;
+            height: 15px;
             cursor: nw-resize;
             opacity: 0.3;
         }
 
-        .note-item .note-resize:hover {
+        .note-item .note-resize-handle:hover {
             opacity: 1;
         }
 
@@ -308,7 +382,7 @@
             position: sticky;
             top: 0;
             z-index: 10;
-            background: rgba(0, 0, 0, 0.5);
+            background: rgba(0, 0, 0, 0.6);
             backdrop-filter: blur(5px);
         }
 
@@ -316,6 +390,7 @@
             padding: 10px;
             text-align: left;
             border-bottom: 2px solid var(--text-color, #ffffff);
+            background: rgba(0, 0, 0, 0.4);
         }
 
         td {
@@ -353,34 +428,6 @@
 
         .completed-row td {
             opacity: 0.7;
-        }
-
-        /* Навигация таблицы */
-        .table-nav {
-            display: flex;
-            flex-direction: column;
-            position: absolute;
-            right: 10px;
-            bottom: 10px;
-            gap: 5px;
-        }
-
-        .table-nav button {
-            width: 40px;
-            height: 30px;
-            background: rgba(0, 0, 0, 0.5);
-            backdrop-filter: blur(5px);
-            border: 1px solid var(--text-color, #ffffff);
-            color: var(--text-color, #ffffff);
-            cursor: pointer;
-            border-radius: 3px;
-            font-size: 16px;
-            transition: all 0.3s;
-        }
-
-        .table-nav button:hover {
-            background: var(--text-color, #ffffff);
-            color: var(--bg-color, #2b2b2b);
         }
 
         /* Магазин */
@@ -568,6 +615,20 @@
             padding: 0;
         }
 
+        .gradient-colors .color-move-btn {
+            background: none;
+            border: none;
+            color: var(--text-color, #ffffff);
+            cursor: pointer;
+            font-size: 14px;
+            padding: 0 3px;
+            opacity: 0.5;
+        }
+
+        .gradient-colors .color-move-btn:hover {
+            opacity: 1;
+        }
+
         .gradient-colors .remove-gradient-btn {
             background: none;
             border: none;
@@ -584,6 +645,7 @@
             border-radius: 5px;
             cursor: pointer;
             font-size: 12px;
+            margin-top: 5px;
         }
 
         .slider-container {
@@ -699,10 +761,11 @@
             background: rgba(0, 0, 0, 0.95);
             backdrop-filter: blur(10px);
             border: 1px solid var(--text-color, #ffffff);
-            border-radius: 5px;
+            border-radius: 8px;
             padding: 5px 0;
             z-index: 3000;
-            min-width: 150px;
+            min-width: 180px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
         }
 
         .context-menu.active {
@@ -710,10 +773,11 @@
         }
 
         .context-menu-item {
-            padding: 8px 20px;
+            padding: 10px 20px;
             cursor: pointer;
             transition: background 0.3s;
             color: var(--text-color, #ffffff);
+            font-size: 14px;
         }
 
         .context-menu-item:hover {
@@ -722,6 +786,10 @@
 
         .context-menu-item.danger {
             color: #ff4444;
+        }
+
+        .context-menu-item.danger:hover {
+            background: rgba(255, 68, 68, 0.2);
         }
 
         /* Адаптивность */
@@ -759,7 +827,11 @@
 </head>
 <body>
     <div id="app">
-        <div class="gradient-overlay" id="gradientOverlay"></div>
+        <!-- Фоновые слои -->
+        <div class="bg-layer" id="bgLayer"></div>
+        <div class="gradient-layer" id="gradientLayer"></div>
+        <div class="image-layer" id="imageLayer"></div>
+        
         <div class="app-content">
             <!-- Верхняя панель -->
             <div class="top-panel">
@@ -915,7 +987,7 @@
             settings: {
                 bgColor: '#2b2b2b',
                 textColor: '#ffffff',
-                tableColor: '#3c3c3c',
+                tableColor: 'rgba(60, 60, 60, 0.6)',
                 gradientColors: ['#2b2b2b', '#1a1a2e'],
                 bgImage: null,
                 musicVolume: 50,
@@ -929,7 +1001,6 @@
 
         // ===== ЗВУК =====
         let audioContext = null;
-        let soundEnabled = true;
 
         function playClickSound() {
             if (!data.settings.soundEffects) return;
@@ -943,7 +1014,7 @@
                 gainNode.connect(audioContext.destination);
                 oscillator.frequency.value = 800;
                 oscillator.type = 'sine';
-                gainNode.gain.value = 0.1;
+                gainNode.gain.value = 0.08;
                 oscillator.start();
                 oscillator.stop(audioContext.currentTime + 0.05);
             } catch (e) {
@@ -951,55 +1022,71 @@
             }
         }
 
+        // Глобальный обработчик для всех кликов
+        document.addEventListener('click', function() {
+            playClickSound();
+        });
+
         // ===== МУЗЫКА =====
         let musicFiles = [];
         let currentMusicIndex = 0;
         let isPlaying = false;
         let musicAudio = null;
+        let musicLoaded = false;
 
         function loadMusicFiles() {
             musicFiles = [];
+            const urls = [];
             for (let i = 1; i <= 10; i++) {
-                const url = `songs/background${i}.mp3`;
+                urls.push(`songs/background${i}.mp3`);
+            }
+            urls.push('songs/background.mp3');
+            
+            let loaded = 0;
+            urls.forEach(url => {
                 fetch(url, { method: 'HEAD' })
                     .then(res => {
                         if (res.ok && !musicFiles.includes(url)) {
                             musicFiles.push(url);
-                            if (musicFiles.length === 1 && !musicAudio) {
-                                playSong(0);
-                            }
                         }
-                    })
-                    .catch(() => {});
-            }
-            const defaultUrl = 'songs/background.mp3';
-            fetch(defaultUrl, { method: 'HEAD' })
-                .then(res => {
-                    if (res.ok && !musicFiles.includes(defaultUrl)) {
-                        musicFiles.push(defaultUrl);
-                        if (musicFiles.length === 1 && !musicAudio) {
+                        loaded++;
+                        if (loaded === urls.length && musicFiles.length > 0 && !musicLoaded) {
+                            musicLoaded = true;
                             playSong(0);
                         }
-                    }
-                })
-                .catch(() => {});
+                    })
+                    .catch(() => {
+                        loaded++;
+                        if (loaded === urls.length && musicFiles.length > 0 && !musicLoaded) {
+                            musicLoaded = true;
+                            playSong(0);
+                        }
+                    });
+            });
         }
 
         function playSong(index) {
-            if (musicFiles.length === 0 || index >= musicFiles.length) return;
-            if (musicAudio) {
-                musicAudio.pause();
-                musicAudio = null;
+            if (musicFiles.length === 0 || index >= musicFiles.length) {
+                return;
             }
-            musicAudio = new Audio(musicFiles[index]);
-            musicAudio.volume = data.settings.musicVolume / 100;
-            musicAudio.addEventListener('ended', () => {
-                nextSong();
-            });
-            musicAudio.play().catch(() => {});
-            currentMusicIndex = index;
-            isPlaying = true;
-            document.getElementById('playBtn').textContent = '⏸';
+            try {
+                if (musicAudio) {
+                    musicAudio.pause();
+                    musicAudio = null;
+                }
+                musicAudio = new Audio(musicFiles[index]);
+                musicAudio.volume = data.settings.musicVolume / 100;
+                musicAudio.addEventListener('ended', () => {
+                    nextSong();
+                });
+                musicAudio.load();
+                musicAudio.play().catch(() => {});
+                currentMusicIndex = index;
+                isPlaying = true;
+                document.getElementById('playBtn').textContent = '⏸';
+            } catch (e) {
+                console.log('Play error:', e);
+            }
         }
 
         function togglePlay() {
@@ -1063,7 +1150,7 @@
                         data.settings = {
                             bgColor: '#2b2b2b',
                             textColor: '#ffffff',
-                            tableColor: '#3c3c3c',
+                            tableColor: 'rgba(60, 60, 60, 0.6)',
                             gradientColors: ['#2b2b2b', '#1a1a2e'],
                             bgImage: null,
                             musicVolume: 50,
@@ -1072,6 +1159,9 @@
                     }
                     if (!data.settings.gradientColors) {
                         data.settings.gradientColors = ['#2b2b2b', '#1a1a2e'];
+                    }
+                    if (!data.settings.tableColor) {
+                        data.settings.tableColor = 'rgba(60, 60, 60, 0.6)';
                     }
                     applySettings();
                     updateAll();
@@ -1085,35 +1175,38 @@
         // ===== ПРИМЕНЕНИЕ НАСТРОЕК =====
         function applySettings() {
             const root = document.documentElement;
-            const app = document.getElementById('app');
             
             // Основной цвет фона
-            app.style.backgroundColor = data.settings.bgColor;
+            document.getElementById('bgLayer').style.backgroundColor = data.settings.bgColor;
             
             // Градиент
-            const gradientOverlay = document.getElementById('gradientOverlay');
+            const gradientLayer = document.getElementById('gradientLayer');
             if (data.settings.gradientColors && data.settings.gradientColors.length > 1) {
                 const gradient = `linear-gradient(to bottom, ${data.settings.gradientColors.join(', ')})`;
-                gradientOverlay.style.background = gradient;
-                gradientOverlay.style.display = 'block';
+                gradientLayer.style.background = gradient;
+                gradientLayer.style.display = 'block';
             } else {
-                gradientOverlay.style.display = 'none';
+                gradientLayer.style.display = 'none';
             }
             
             // Фоновое изображение
+            const imageLayer = document.getElementById('imageLayer');
             if (data.settings.bgImage) {
-                app.style.backgroundImage = `url(${data.settings.bgImage})`;
-                app.style.backgroundSize = 'cover';
-                app.style.backgroundPosition = 'center';
+                imageLayer.style.backgroundImage = `url(${data.settings.bgImage})`;
+                imageLayer.style.display = 'block';
             } else {
-                app.style.backgroundImage = 'none';
+                imageLayer.style.display = 'none';
             }
             
             // Цвет текста
             root.style.setProperty('--text-color', data.settings.textColor);
-            document.querySelectorAll('.modal-content').forEach(el => {
-                el.style.color = data.settings.textColor;
-                el.style.borderColor = data.settings.textColor;
+            
+            // Цвет таблиц (полупрозрачный)
+            root.style.setProperty('--table-color', data.settings.tableColor);
+            
+            // Применяем цвет таблиц
+            document.querySelectorAll('.table-container, .store-item, .notes-panel, .modal-content').forEach(el => {
+                el.style.backgroundColor = data.settings.tableColor;
             });
             
             // Музыка
@@ -1181,6 +1274,7 @@
         // ===== ДОЛГОЕ НАЖАТИЕ =====
         let longPressTimer = null;
         let longPressTarget = null;
+        let isContextOpen = false;
 
         function setupLongPress(tbody, type) {
             const rows = tbody.querySelectorAll('.draggable-row');
@@ -1188,7 +1282,8 @@
                 row.addEventListener('mousedown', function(e) {
                     longPressTarget = { type, index: parseInt(this.dataset.index) };
                     longPressTimer = setTimeout(() => {
-                        if (longPressTarget) {
+                        if (longPressTarget && !isContextOpen) {
+                            isContextOpen = true;
                             openContextMenu(e, longPressTarget.type, longPressTarget.index);
                             longPressTarget = null;
                         }
@@ -1197,12 +1292,16 @@
                 
                 row.addEventListener('mouseup', function() {
                     clearTimeout(longPressTimer);
-                    longPressTarget = null;
+                    if (!isContextOpen) {
+                        longPressTarget = null;
+                    }
                 });
                 
                 row.addEventListener('mouseleave', function() {
                     clearTimeout(longPressTimer);
-                    longPressTarget = null;
+                    if (!isContextOpen) {
+                        longPressTarget = null;
+                    }
                 });
             });
         }
@@ -1214,14 +1313,25 @@
             contextType = type;
             contextIndex = index;
             
-            menu.style.left = Math.min(event.clientX, window.innerWidth - 170) + 'px';
-            menu.style.top = Math.min(event.clientY, window.innerHeight - 100) + 'px';
+            let x = event.clientX;
+            let y = event.clientY;
+            
+            // Корректируем позицию, чтобы меню не выходило за экран
+            if (x + 200 > window.innerWidth) x = window.innerWidth - 200;
+            if (y + 100 > window.innerHeight) y = window.innerHeight - 100;
+            
+            menu.style.left = x + 'px';
+            menu.style.top = y + 'px';
             menu.classList.add('active');
-            playClickSound();
+            isContextOpen = true;
         }
 
         function closeContextMenu() {
             document.getElementById('contextMenu').classList.remove('active');
+            isContextOpen = false;
+            contextTarget = null;
+            contextType = null;
+            contextIndex = null;
         }
 
         function contextEdit() {
@@ -1234,18 +1344,7 @@
                         showTempTaskDialog(contextIndex);
                     } else {
                         const task = taskList[contextIndex];
-                        const name = prompt('Название:', task.name);
-                        if (name !== null) {
-                            task.name = name || 'Без названия';
-                        }
-                        const reward = prompt('Награда:', task.reward);
-                        if (reward !== null) {
-                            const num = parseInt(reward);
-                            if (!isNaN(num)) task.reward = num;
-                        }
-                        saveData();
-                        updateAll();
-                        playClickSound();
+                        showEditTaskDialog(contextType, contextIndex);
                     }
                 }
             }
@@ -1254,17 +1353,67 @@
         function contextDelete() {
             closeContextMenu();
             if (contextType && contextIndex !== null) {
-                if (confirm('Удалить это задание?')) {
+                if (confirm('🗑️ Удалить это задание?')) {
                     const taskList = contextType === 'tasks' ? data.tasks : 
                                    contextType === 'temp' ? data.tempTasks : null;
                     if (taskList && contextIndex < taskList.length) {
                         taskList.splice(contextIndex, 1);
                         saveData();
                         updateAll();
-                        playClickSound();
                     }
                 }
             }
+        }
+
+        // ===== ДИАЛОГ РЕДАКТИРОВАНИЯ =====
+        function showEditTaskDialog(type, index) {
+            const taskList = type === 'tasks' ? data.tasks : 
+                           type === 'temp' ? data.tempTasks : null;
+            if (!taskList || index >= taskList.length) return;
+            
+            const task = taskList[index];
+            const modal = document.getElementById('modal');
+            const content = document.getElementById('modalContent');
+            
+            content.innerHTML = `
+                <h2>✏️ Редактировать задание</h2>
+                <label>Название:</label>
+                <input type="text" id="editTaskName" value="${task.name || ''}">
+                <label>Награда:</label>
+                <input type="number" id="editTaskReward" value="${task.reward || 0}">
+                ${type === 'temp' ? `
+                    <label>Дедлайн:</label>
+                    <input type="datetime-local" id="editTaskDeadline" value="${task.deadline || ''}">
+                ` : ''}
+                <div class="buttons">
+                    <button class="btn-primary" onclick="saveEditTask('${type}', ${index})">💾 Сохранить</button>
+                    <button onclick="closeModal()">❌ Отмена</button>
+                </div>
+            `;
+            
+            modal.classList.add('active');
+        }
+
+        function saveEditTask(type, index) {
+            const taskList = type === 'tasks' ? data.tasks : 
+                           type === 'temp' ? data.tempTasks : null;
+            if (!taskList || index >= taskList.length) return;
+            
+            const task = taskList[index];
+            const name = document.getElementById('editTaskName').value || 'Без названия';
+            const reward = parseInt(document.getElementById('editTaskReward').value) || 0;
+            
+            task.name = name;
+            task.reward = reward;
+            
+            if (type === 'temp') {
+                const deadline = document.getElementById('editTaskDeadline').value || '';
+                task.deadline = deadline;
+            }
+            
+            saveData();
+            updateAll();
+            closeModal();
         }
 
         // ===== DRAG & DROP =====
@@ -1313,7 +1462,6 @@
                             taskList.splice(targetIndex, 0, moved);
                             saveData();
                             updateAll();
-                            playClickSound();
                         }
                     }
                     dragData = null;
@@ -1330,21 +1478,35 @@
             const task = taskList[index];
             if (task.status) return;
             
+            // Проверяем дедлайн для временных заданий
+            if (type === 'temp' && task.deadline) {
+                const now = new Date();
+                const deadline = new Date(task.deadline);
+                if (now > deadline) {
+                    showNotification('⏰ Время вышло! Ничего страшного, в следующий раз!');
+                    task.status = 'failed';
+                    taskList.splice(index, 1);
+                    saveData();
+                    updateAll();
+                    return;
+                }
+            }
+            
             task.status = true;
             
             // Тратим баллы только если награда отрицательная
             if (task.reward < 0) {
                 if (data.balance < Math.abs(task.reward)) {
-                    showNotification(`Недостаточно баллов! Нужно: ${Math.abs(task.reward)}`);
+                    showNotification(`❌ Недостаточно баллов! Нужно: ${Math.abs(task.reward)}`);
                     task.status = false;
                     return;
                 }
                 data.balance += task.reward;
-                showNotification(`Вы потратили ${Math.abs(task.reward)} баллов на "${task.name}"! Молодцы что накопили на него!`);
+                showNotification(`🎉 Вы потратили ${Math.abs(task.reward)} баллов на "${task.name}"! Молодцы что накопили на него!`);
             } else {
                 data.balance += task.reward;
                 const rewardText = task.reward >= 0 ? `+${task.reward}` : `${task.reward}`;
-                showNotification(`Молодец! Вот твоя награда: ${rewardText} баллов!`);
+                showNotification(`🎉 Молодец! Вот твоя награда: ${rewardText} баллов!`);
             }
             
             // Добавляем в завершенные
@@ -1354,7 +1516,6 @@
             saveData();
             updateAll();
             updateBalance();
-            playClickSound();
         }
 
         function createTask(type) {
@@ -1367,7 +1528,6 @@
                 }
                 saveData();
                 updateAll();
-                playClickSound();
             }
         }
 
@@ -1391,7 +1551,6 @@
                 }
                 saveData();
                 updateAll();
-                playClickSound();
             }
         }
 
@@ -1404,7 +1563,7 @@
             const task = isEdit ? data.tempTasks[editIndex] : { name: '', reward: 0, deadline: '' };
             
             content.innerHTML = `
-                <h2>${isEdit ? 'Редактировать' : 'Новое'} временное задание</h2>
+                <h2>${isEdit ? '✏️ Редактировать' : '➕ Новое'} временное задание</h2>
                 <label>Название:</label>
                 <input type="text" id="tempName" value="${task.name || ''}" placeholder="Введите название">
                 <label>Награда:</label>
@@ -1435,7 +1594,6 @@
             saveData();
             updateAll();
             closeModal();
-            playClickSound();
         }
 
         function deleteTempTask(index) {
@@ -1444,7 +1602,6 @@
                 saveData();
                 updateAll();
                 closeModal();
-                playClickSound();
             }
         }
 
@@ -1458,7 +1615,7 @@
                 const costDisplay = `-${item.cost || 0}`;
                 html += `
                     <div class="store-item" onclick="buyStoreItem(${index})" 
-                         oncontextmenu="editStoreItem(${index}); return false;">
+                         oncontextmenu="openStoreContextMenu(event, ${index}); return false;">
                         <div>${item.icon || '😊'}</div>
                         <div class="item-name">${item.name || 'Без названия'}</div>
                         <div class="item-cost">${costDisplay}</div>
@@ -1473,6 +1630,44 @@
             `;
             
             grid.innerHTML = html;
+            
+            // Добавляем долгое нажатие для магазина
+            const items = grid.querySelectorAll('.store-item:not(.add-btn)');
+            items.forEach((item, index) => {
+                let timer = null;
+                item.addEventListener('mousedown', function(e) {
+                    timer = setTimeout(() => {
+                        if (!isContextOpen) {
+                            isContextOpen = true;
+                            openStoreContextMenu(e, index);
+                        }
+                    }, 600);
+                });
+                item.addEventListener('mouseup', function() {
+                    clearTimeout(timer);
+                });
+                item.addEventListener('mouseleave', function() {
+                    clearTimeout(timer);
+                });
+            });
+        }
+
+        function openStoreContextMenu(event, index) {
+            event.preventDefault();
+            const menu = document.getElementById('contextMenu');
+            contextType = 'store';
+            contextIndex = index;
+            
+            let x = event.clientX;
+            let y = event.clientY;
+            
+            if (x + 200 > window.innerWidth) x = window.innerWidth - 200;
+            if (y + 100 > window.innerHeight) y = window.innerHeight - 100;
+            
+            menu.style.left = x + 'px';
+            menu.style.top = y + 'px';
+            menu.classList.add('active');
+            isContextOpen = true;
         }
 
         function addStoreItem() {
@@ -1505,7 +1700,6 @@
             saveData();
             renderStore();
             closeModal();
-            playClickSound();
         }
 
         function editStoreItem(index) {
@@ -1543,7 +1737,6 @@
                 saveData();
                 renderStore();
                 closeModal();
-                playClickSound();
             }
         }
 
@@ -1553,7 +1746,6 @@
                 saveData();
                 renderStore();
                 closeModal();
-                playClickSound();
             }
         }
 
@@ -1561,7 +1753,6 @@
             if (index >= data.store.length) return;
             const item = data.store[index];
             
-            // Добавляем задание с отрицательной наградой
             data.tasks.push({
                 name: item.name,
                 reward: -item.cost,
@@ -1570,11 +1761,10 @@
             
             saveData();
             updateAll();
-            showNotification(`Задание "${item.name}" добавлено в список! Выполните его чтобы потратить ${item.cost} баллов.`);
-            playClickSound();
+            showNotification(`📋 Задание "${item.name}" добавлено в список! Выполните его чтобы потратить ${item.cost} баллов.`);
         }
 
-        // ===== ЗАВЕРШЕННЫЕ ЗАДАНИЯ (долгое нажатие для удаления) =====
+        // ===== ЗАВЕРШЕННЫЕ ЗАДАНИЯ =====
         function setupCompletedLongPress() {
             const container = document.getElementById('completedContainer');
             if (!container) return;
@@ -1594,7 +1784,6 @@
                                     data.completed.splice(index, 1);
                                     saveData();
                                     updateAll();
-                                    playClickSound();
                                 }
                             }
                             target = null;
@@ -1614,7 +1803,9 @@
             });
         }
 
-        // ===== ЗАМЕТКИ =====
+        // ===== ЗАМЕТКИ (стикеры) =====
+        let noteDragData = null;
+
         function renderNotes() {
             const lists = document.querySelectorAll('.notes-list');
             lists.forEach(list => {
@@ -1622,32 +1813,75 @@
                 data.notes.forEach((note, index) => {
                     const div = document.createElement('div');
                     div.className = 'note-item';
+                    div.dataset.index = index;
+                    div.draggable = true;
+                    div.style.width = note.width || 'auto';
+                    div.style.height = note.height ? note.height + 'px' : 'auto';
                     div.innerHTML = `
                         <button class="note-delete" onclick="deleteNote(${index})">✕</button>
-                        <textarea onchange="updateNote(${index}, this.value)" 
+                        <textarea oninput="updateNoteText(${index}, this.value)" 
                                   style="min-height: ${note.height || 40}px;">${note.text || ''}</textarea>
-                        <div class="note-resize" onmousedown="startNoteResize(event, ${index})"></div>
+                        <div class="note-resize-handle" onmousedown="startNoteResize(event, ${index})"></div>
                     `;
+                    
+                    // Drag & Drop для заметок
+                    div.addEventListener('dragstart', function(e) {
+                        noteDragData = { index: parseInt(this.dataset.index) };
+                        this.classList.add('dragging');
+                        e.dataTransfer.effectAllowed = 'move';
+                    });
+                    
+                    div.addEventListener('dragend', function() {
+                        this.classList.remove('dragging');
+                        document.querySelectorAll('.note-item.drag-over').forEach(el => el.classList.remove('drag-over'));
+                    });
+                    
+                    div.addEventListener('dragover', function(e) {
+                        e.preventDefault();
+                        e.dataTransfer.dropEffect = 'move';
+                        document.querySelectorAll('.note-item.drag-over').forEach(el => el.classList.remove('drag-over'));
+                        this.classList.add('drag-over');
+                    });
+                    
+                    div.addEventListener('dragleave', function() {
+                        this.classList.remove('drag-over');
+                    });
+                    
+                    div.addEventListener('drop', function(e) {
+                        e.preventDefault();
+                        this.classList.remove('drag-over');
+                        if (!noteDragData) return;
+                        
+                        const fromIndex = noteDragData.index;
+                        const toIndex = parseInt(this.dataset.index);
+                        
+                        if (fromIndex !== toIndex) {
+                            const [moved] = data.notes.splice(fromIndex, 1);
+                            data.notes.splice(toIndex, 0, moved);
+                            saveData();
+                            renderNotes();
+                        }
+                        noteDragData = null;
+                    });
+                    
                     list.appendChild(div);
                 });
             });
         }
 
         function addNote() {
-            data.notes.push({ text: 'Новая заметка...', height: 60 });
+            data.notes.push({ text: 'Новая заметка...', height: 60, width: null });
             saveData();
             renderNotes();
-            playClickSound();
         }
 
         function deleteNote(index) {
             data.notes.splice(index, 1);
             saveData();
             renderNotes();
-            playClickSound();
         }
 
-        function updateNote(index, text) {
+        function updateNoteText(index, text) {
             if (index < data.notes.length) {
                 data.notes[index].text = text;
                 saveData();
@@ -1656,15 +1890,19 @@
 
         function startNoteResize(event, index) {
             event.preventDefault();
-            const startY = event.clientY;
             const note = event.target.closest('.note-item');
-            const textarea = note.querySelector('textarea');
-            const startHeight = textarea.style.minHeight ? parseInt(textarea.style.minHeight) : 60;
+            const startX = event.clientX;
+            const startY = event.clientY;
+            const startWidth = note.offsetWidth;
+            const startHeight = note.offsetHeight;
             
             function onMove(e) {
-                const newHeight = Math.max(40, startHeight + (e.clientY - startY));
-                textarea.style.minHeight = newHeight + 'px';
+                const newWidth = Math.max(100, startWidth + (e.clientX - startX));
+                const newHeight = Math.max(50, startHeight + (e.clientY - startY));
+                note.style.width = newWidth + 'px';
+                note.style.height = newHeight + 'px';
                 if (index < data.notes.length) {
+                    data.notes[index].width = newWidth;
                     data.notes[index].height = newHeight;
                 }
             }
@@ -1690,7 +1928,7 @@
                     const startWidth = panel.offsetWidth;
                     
                     function onMove(ev) {
-                        const newWidth = Math.max(200, Math.min(500, startWidth + (startX - ev.clientX)));
+                        const newWidth = Math.max(150, Math.min(500, startWidth + (startX - ev.clientX)));
                         panel.style.width = newWidth + 'px';
                     }
                     
@@ -1714,6 +1952,8 @@
             let gradientHtml = gradientColors.map((color, i) => `
                 <div class="color-input-wrapper">
                     <input type="color" value="${color}" onchange="updateGradientColor(${i}, this.value)">
+                    <button class="color-move-btn" onclick="moveGradientColor(${i}, -1)" ${i === 0 ? 'disabled' : ''}>⬆</button>
+                    <button class="color-move-btn" onclick="moveGradientColor(${i}, 1)" ${i === gradientColors.length - 1 ? 'disabled' : ''}>⬇</button>
                     <button class="remove-gradient-btn" onclick="removeGradientColor(${i})">✕</button>
                 </div>
             `).join('');
@@ -1736,11 +1976,20 @@
                 </div>
                 
                 <div class="settings-group">
+                    <label>Цвет таблиц (полупрозрачный):</label>
+                    <div class="color-picker">
+                        <input type="color" id="tableColor" value="${data.settings.tableColor.replace(/[^0-9a-f]/gi, '') || '3c3c3c'}">
+                        <span style="opacity:0.7; font-size:12px;">Прозрачность: 60%</span>
+                    </div>
+                </div>
+                
+                <div class="settings-group">
                     <label>Градиент фона (сверху вниз):</label>
                     <div class="gradient-colors" id="gradientColors">
                         ${gradientHtml}
                     </div>
                     <button class="add-gradient-btn" onclick="addGradientColor()">+ Добавить цвет</button>
+                    ${gradientColors.length > 1 ? `<button class="add-gradient-btn" onclick="clearGradient()" style="margin-left:5px;">🗑️ Очистить градиент</button>` : ''}
                 </div>
                 
                 <div class="settings-group">
@@ -1783,13 +2032,19 @@
         function saveSettings() {
             data.settings.bgColor = document.getElementById('bgColor').value;
             data.settings.textColor = document.getElementById('textColor').value;
+            const tableColor = document.getElementById('tableColor').value;
+            data.settings.tableColor = tableColor + '99'; // добавляем прозрачность
+            
+            // Сохраняем градиент
+            const colorInputs = document.querySelectorAll('#gradientColors input[type="color"]');
+            data.settings.gradientColors = Array.from(colorInputs).map(input => input.value);
+            
             data.settings.musicVolume = parseInt(document.getElementById('musicVolume').value);
             data.settings.soundEffects = document.getElementById('soundEffects').checked;
             
             applySettings();
             saveData();
             closeModal();
-            playClickSound();
         }
 
         function addGradientColor() {
@@ -1800,11 +2055,27 @@
         }
 
         function removeGradientColor(index) {
-            if (data.settings.gradientColors.length > 2) {
+            if (data.settings.gradientColors.length > 1) {
                 data.settings.gradientColors.splice(index, 1);
                 saveData();
                 openSettings();
             }
+        }
+
+        function moveGradientColor(index, direction) {
+            const newIndex = index + direction;
+            if (newIndex < 0 || newIndex >= data.settings.gradientColors.length) return;
+            const temp = data.settings.gradientColors[index];
+            data.settings.gradientColors[index] = data.settings.gradientColors[newIndex];
+            data.settings.gradientColors[newIndex] = temp;
+            saveData();
+            openSettings();
+        }
+
+        function clearGradient() {
+            data.settings.gradientColors = [data.settings.bgColor];
+            saveData();
+            openSettings();
         }
 
         function updateGradientColor(index, color) {
@@ -1824,7 +2095,6 @@
                     saveData();
                     applySettings();
                     openSettings();
-                    playClickSound();
                 };
                 reader.readAsDataURL(file);
             }
@@ -1835,7 +2105,6 @@
             saveData();
             applySettings();
             openSettings();
-            playClickSound();
         }
 
         function resetAll() {
@@ -1850,7 +2119,7 @@
                     settings: {
                         bgColor: '#2b2b2b',
                         textColor: '#ffffff',
-                        tableColor: '#3c3c3c',
+                        tableColor: 'rgba(60, 60, 60, 0.6)',
                         gradientColors: ['#2b2b2b', '#1a1a2e'],
                         bgImage: null,
                         musicVolume: 50,
@@ -1862,7 +2131,6 @@
                 updateAll();
                 updateBalance();
                 closeModal();
-                playClickSound();
             }
         }
 
@@ -1875,7 +2143,6 @@
             document.querySelector(`.tab-btn[data-tab="${tab}"]`).classList.add('active');
             
             if (tab === 'store') renderStore();
-            playClickSound();
         }
 
         function updateAll() {
@@ -1893,7 +2160,7 @@
         function scrollTable(containerId, direction) {
             const container = document.getElementById(containerId);
             if (container) {
-                const scrollAmount = 100 * direction;
+                const scrollAmount = 80 * direction;
                 container.scrollTop += scrollAmount;
             }
         }
@@ -1921,7 +2188,11 @@
             updateBalance();
             setupCompletedLongPress();
             setupNotePanelResize();
-            loadMusicFiles();
+            
+            // Загружаем музыку с задержкой
+            setTimeout(() => {
+                loadMusicFiles();
+            }, 500);
             
             // Закрываем контекстное меню при клике вне
             document.addEventListener('click', function(e) {
