@@ -1,0 +1,1396 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Менеджер заданий</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #2b2b2b;
+            color: #ffffff;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* Главный контейнер */
+        .app-container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            padding: 10px;
+            background: var(--bg-color, #2b2b2b);
+            color: var(--text-color, #ffffff);
+        }
+
+        /* Верхняя панель */
+        .top-panel {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 20px;
+            background: var(--table-color, #3c3c3c);
+            border-radius: 10px;
+            margin-bottom: 10px;
+        }
+
+        .balance {
+            font-size: 20px;
+            font-weight: bold;
+        }
+
+        .settings-btn {
+            font-size: 24px;
+            background: none;
+            border: none;
+            color: var(--text-color, #ffffff);
+            cursor: pointer;
+            padding: 5px 10px;
+            border-radius: 5px;
+            transition: background 0.3s;
+        }
+
+        .settings-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        /* Музыкальный плеер */
+        .music-player {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            padding: 10px;
+            background: var(--table-color, #3c3c3c);
+            border-radius: 10px;
+            margin-bottom: 10px;
+        }
+
+        .music-player button {
+            background: none;
+            border: 1px solid var(--text-color, #ffffff);
+            color: var(--text-color, #ffffff);
+            font-size: 20px;
+            padding: 5px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .music-player button:hover {
+            background: var(--text-color, #ffffff);
+            color: var(--table-color, #3c3c3c);
+        }
+
+        /* Вкладки */
+        .tabs {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+        }
+
+        .tab-btn {
+            padding: 10px 20px;
+            background: var(--table-color, #3c3c3c);
+            border: 1px solid var(--text-color, #ffffff);
+            color: var(--text-color, #ffffff);
+            cursor: pointer;
+            border-radius: 5px 5px 0 0;
+            transition: all 0.3s;
+            flex: 1;
+            min-width: 100px;
+        }
+
+        .tab-btn.active {
+            background: var(--text-color, #ffffff);
+            color: var(--table-color, #3c3c3c);
+        }
+
+        .tab-btn:hover {
+            opacity: 0.8;
+        }
+
+        /* Контент вкладок */
+        .tab-content {
+            flex: 1;
+            display: none;
+            flex-direction: column;
+            background: var(--bg-color, #2b2b2b);
+            border-radius: 0 0 10px 10px;
+            overflow: hidden;
+        }
+
+        .tab-content.active {
+            display: flex;
+        }
+
+        /* Таблицы */
+        .table-container {
+            flex: 1;
+            overflow: auto;
+            position: relative;
+            background: var(--table-color, #3c3c3c);
+            border-radius: 5px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            color: var(--text-color, #ffffff);
+        }
+
+        thead {
+            position: sticky;
+            top: 0;
+            background: var(--table-color, #3c3c3c);
+            z-index: 10;
+        }
+
+        th {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 2px solid var(--text-color, #ffffff);
+            background: var(--table-color, #3c3c3c);
+        }
+
+        td {
+            padding: 10px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            cursor: pointer;
+        }
+
+        .draggable-row {
+            cursor: grab;
+        }
+
+        .draggable-row:active {
+            cursor: grabbing;
+        }
+
+        .dragging {
+            opacity: 0.5;
+        }
+
+        .drag-over {
+            border-top: 2px solid var(--text-color, #ffffff);
+        }
+
+        .status-checkbox {
+            cursor: pointer;
+            font-size: 20px;
+            text-align: center;
+        }
+
+        .empty-row td {
+            color: rgba(255, 255, 255, 0.3);
+            font-style: italic;
+        }
+
+        .completed-row td {
+            opacity: 0.7;
+        }
+
+        /* Навигация таблицы */
+        .table-nav {
+            display: flex;
+            flex-direction: column;
+            position: absolute;
+            right: 10px;
+            bottom: 10px;
+            gap: 5px;
+        }
+
+        .table-nav button {
+            width: 40px;
+            height: 30px;
+            background: var(--table-color, #3c3c3c);
+            border: 1px solid var(--text-color, #ffffff);
+            color: var(--text-color, #ffffff);
+            cursor: pointer;
+            border-radius: 3px;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+
+        .table-nav button:hover {
+            background: var(--text-color, #ffffff);
+            color: var(--table-color, #3c3c3c);
+        }
+
+        /* Магазин */
+        .store-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            padding: 20px;
+            overflow-y: auto;
+            flex: 1;
+            align-content: start;
+        }
+
+        .store-item {
+            aspect-ratio: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: var(--table-color, #3c3c3c);
+            border: 2px solid var(--text-color, #ffffff);
+            border-radius: 10px;
+            font-size: 30px;
+            cursor: pointer;
+            transition: all 0.3s;
+            min-height: 80px;
+            padding: 10px;
+            position: relative;
+        }
+
+        .store-item:hover {
+            transform: scale(1.05);
+        }
+
+        .store-item .item-name {
+            font-size: 12px;
+            margin-top: 5px;
+            text-align: center;
+            word-break: break-all;
+        }
+
+        .store-item.add-btn {
+            font-size: 40px;
+            border-style: dashed;
+        }
+
+        /* Модальные окна */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: var(--bg-color, #2b2b2b);
+            padding: 30px;
+            border-radius: 10px;
+            min-width: 300px;
+            max-width: 500px;
+            border: 1px solid var(--text-color, #ffffff);
+        }
+
+        .modal-content h2 {
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .modal-content label {
+            display: block;
+            margin: 10px 0 5px;
+        }
+
+        .modal-content input,
+        .modal-content select {
+            width: 100%;
+            padding: 8px;
+            background: var(--table-color, #3c3c3c);
+            color: var(--text-color, #ffffff);
+            border: 1px solid var(--text-color, #ffffff);
+            border-radius: 5px;
+            font-size: 14px;
+        }
+
+        .modal-content .buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+            justify-content: flex-end;
+        }
+
+        .modal-content .buttons button {
+            padding: 8px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .modal-content .buttons .btn-primary {
+            background: var(--text-color, #ffffff);
+            color: var(--bg-color, #2b2b2b);
+        }
+
+        .modal-content .buttons .btn-danger {
+            background: #8B0000;
+            color: white;
+        }
+
+        .modal-content .buttons button:hover {
+            opacity: 0.8;
+        }
+
+        /* Настройки */
+        .settings-group {
+            margin: 15px 0;
+        }
+
+        .color-picker {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .color-picker input[type="color"] {
+            width: 50px;
+            height: 40px;
+            border: none;
+            cursor: pointer;
+            background: none;
+        }
+
+        .slider-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .slider-container input[type="range"] {
+            flex: 1;
+            height: 6px;
+            -webkit-appearance: none;
+            background: var(--text-color, #ffffff);
+            border-radius: 3px;
+            outline: none;
+        }
+
+        .slider-container input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 18px;
+            height: 18px;
+            background: var(--text-color, #ffffff);
+            border-radius: 50%;
+            cursor: pointer;
+        }
+
+        .checkbox-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 10px 0;
+        }
+
+        .checkbox-container input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+
+        .reset-btn {
+            width: 100%;
+            padding: 12px;
+            background: #8B0000;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 20px;
+        }
+
+        .reset-btn:hover {
+            opacity: 0.8;
+        }
+
+        /* Уведомления */
+        .notification {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 15px 30px;
+            background: var(--table-color, #3c3c3c);
+            border: 2px solid var(--text-color, #ffffff);
+            border-radius: 10px;
+            z-index: 2000;
+            display: none;
+            animation: slideDown 0.3s ease;
+            max-width: 90%;
+        }
+
+        .notification.show {
+            display: block;
+        }
+
+        @keyframes slideDown {
+            from {
+                transform: translateX(-50%) translateY(-100px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(-50%) translateY(0);
+                opacity: 1;
+            }
+        }
+
+        /* Прокрутка */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--table-color, #3c3c3c);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--text-color, #ffffff);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            opacity: 0.8;
+        }
+
+        /* Адаптивность */
+        @media (max-width: 768px) {
+            .store-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+            .tab-btn {
+                font-size: 12px;
+                padding: 8px 10px;
+                min-width: 60px;
+            }
+            .modal-content {
+                margin: 20px;
+                min-width: auto;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .store-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            .top-panel {
+                flex-direction: column;
+                gap: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="app" class="app-container">
+        <!-- Верхняя панель -->
+        <div class="top-panel">
+            <div class="balance">Баланс: <span id="balanceDisplay">0</span></div>
+            <button class="settings-btn" onclick="openSettings()">⚙️</button>
+        </div>
+
+        <!-- Музыкальный плеер -->
+        <div class="music-player">
+            <button onclick="prevSong()">⏮</button>
+            <button onclick="togglePlay()" id="playBtn">⏸</button>
+            <button onclick="nextSong()">⏭</button>
+        </div>
+
+        <!-- Вкладки -->
+        <div class="tabs">
+            <button class="tab-btn active" data-tab="tasks" onclick="switchTab('tasks')">Задания</button>
+            <button class="tab-btn" data-tab="completed" onclick="switchTab('completed')">Завершённые</button>
+            <button class="tab-btn" data-tab="store" onclick="switchTab('store')">Магазин</button>
+            <button class="tab-btn" data-tab="temp" onclick="switchTab('temp')">Временные</button>
+        </div>
+
+        <!-- Вкладка Задания -->
+        <div id="tasksTab" class="tab-content active">
+            <div class="table-container" id="tasksContainer">
+                <table id="tasksTable">
+                    <thead>
+                        <tr>
+                            <th style="width: 30px;">#</th>
+                            <th>Задания</th>
+                            <th style="width: 100px;">Награда</th>
+                            <th style="width: 60px;">Статус</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tasksBody"></tbody>
+                </table>
+                <div class="table-nav">
+                    <button onclick="scrollTable('tasksContainer', -1)">▲</button>
+                    <button onclick="scrollTable('tasksContainer', 1)">▼</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Вкладка Завершённые -->
+        <div id="completedTab" class="tab-content">
+            <div class="table-container" id="completedContainer">
+                <table id="completedTable">
+                    <thead>
+                        <tr>
+                            <th style="width: 30px;">#</th>
+                            <th>Задания</th>
+                            <th style="width: 100px;">Награда</th>
+                            <th style="width: 60px;">Статус</th>
+                        </tr>
+                    </thead>
+                    <tbody id="completedBody"></tbody>
+                </table>
+                <div class="table-nav">
+                    <button onclick="scrollTable('completedContainer', -1)">▲</button>
+                    <button onclick="scrollTable('completedContainer', 1)">▼</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Вкладка Магазин -->
+        <div id="storeTab" class="tab-content">
+            <div class="store-grid" id="storeGrid"></div>
+        </div>
+
+        <!-- Вкладка Временные -->
+        <div id="tempTab" class="tab-content">
+            <div class="table-container" id="tempContainer">
+                <table id="tempTable">
+                    <thead>
+                        <tr>
+                            <th style="width: 30px;">#</th>
+                            <th>Задания</th>
+                            <th style="width: 100px;">Награда</th>
+                            <th style="width: 60px;">Статус</th>
+                            <th style="width: 150px;">Дедлайн</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tempBody"></tbody>
+                </table>
+                <div class="table-nav">
+                    <button onclick="scrollTable('tempContainer', -1)">▲</button>
+                    <button onclick="scrollTable('tempContainer', 1)">▼</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно -->
+    <div class="modal" id="modal">
+        <div class="modal-content" id="modalContent"></div>
+    </div>
+
+    <!-- Уведомление -->
+    <div class="notification" id="notification"></div>
+
+    <script>
+        // ===== ДАННЫЕ =====
+        let data = {
+            tasks: [],
+            completed: [],
+            store: [],
+            tempTasks: [],
+            balance: 0,
+            settings: {
+                bgColor: '#2b2b2b',
+                textColor: '#ffffff',
+                tableColor: '#3c3c3c',
+                musicVolume: 50,
+                soundEffects: true
+            }
+        };
+
+        // ===== ЗВУК =====
+        let audioContext = null;
+
+        function playClickSound() {
+            if (!data.settings.soundEffects) return;
+            try {
+                if (!audioContext) {
+                    audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                }
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                oscillator.frequency.value = 800;
+                oscillator.type = 'sine';
+                gainNode.gain.value = 0.1;
+                oscillator.start();
+                oscillator.stop(audioContext.currentTime + 0.05);
+            } catch (e) {
+                console.log('Sound error:', e);
+            }
+        }
+
+        // ===== МУЗЫКА =====
+        let musicFiles = [];
+        let currentMusicIndex = 0;
+        let isPlaying = false;
+        let musicAudio = null;
+
+        function loadMusicFiles() {
+            // В браузере нельзя прочитать папку, поэтому создаем плейлист из доступных файлов
+            // Пользователь может добавить файлы через интерфейс
+            musicFiles = [];
+            // Попытка загрузить файлы, которые пользователь добавил вручную
+            for (let i = 1; i <= 10; i++) {
+                const url = `songs/background${i}.mp3`;
+                // Проверяем существование файла через fetch
+                fetch(url, { method: 'HEAD' })
+                    .then(res => {
+                        if (res.ok && !musicFiles.includes(url)) {
+                            musicFiles.push(url);
+                        }
+                    })
+                    .catch(() => {});
+            }
+            // Добавляем дефолтный файл
+            const defaultUrl = 'songs/background.mp3';
+            fetch(defaultUrl, { method: 'HEAD' })
+                .then(res => {
+                    if (res.ok && !musicFiles.includes(defaultUrl)) {
+                        musicFiles.push(defaultUrl);
+                    }
+                })
+                .catch(() => {});
+        }
+
+        function playSong(index) {
+            if (musicFiles.length === 0 || index >= musicFiles.length) {
+                return;
+            }
+            if (musicAudio) {
+                musicAudio.pause();
+                musicAudio = null;
+            }
+            musicAudio = new Audio(musicFiles[index]);
+            musicAudio.volume = data.settings.musicVolume / 100;
+            musicAudio.addEventListener('ended', () => {
+                nextSong();
+            });
+            musicAudio.play().catch(() => {});
+            currentMusicIndex = index;
+            isPlaying = true;
+            document.getElementById('playBtn').textContent = '⏸';
+        }
+
+        function togglePlay() {
+            if (musicFiles.length === 0) {
+                loadMusicFiles();
+                setTimeout(() => {
+                    if (musicFiles.length > 0) playSong(0);
+                }, 500);
+                return;
+            }
+            if (isPlaying) {
+                if (musicAudio) {
+                    musicAudio.pause();
+                    isPlaying = false;
+                    document.getElementById('playBtn').textContent = '▶';
+                }
+            } else {
+                if (musicAudio) {
+                    musicAudio.play().catch(() => {});
+                    isPlaying = true;
+                    document.getElementById('playBtn').textContent = '⏸';
+                } else {
+                    playSong(currentMusicIndex);
+                }
+            }
+        }
+
+        function nextSong() {
+            if (musicFiles.length === 0) return;
+            const next = (currentMusicIndex + 1) % musicFiles.length;
+            playSong(next);
+        }
+
+        function prevSong() {
+            if (musicFiles.length === 0) return;
+            const prev = (currentMusicIndex - 1 + musicFiles.length) % musicFiles.length;
+            playSong(prev);
+        }
+
+        // ===== СОХРАНЕНИЕ =====
+        function saveData() {
+            try {
+                localStorage.setItem('taskManagerData', JSON.stringify(data));
+            } catch (e) {
+                console.log('Save error:', e);
+            }
+        }
+
+        function loadData() {
+            try {
+                const saved = localStorage.getItem('taskManagerData');
+                if (saved) {
+                    const parsed = JSON.parse(saved);
+                    data = parsed;
+                    // Миграция для новых полей
+                    if (!data.tempTasks) data.tempTasks = [];
+                    if (!data.settings) {
+                        data.settings = {
+                            bgColor: '#2b2b2b',
+                            textColor: '#ffffff',
+                            tableColor: '#3c3c3c',
+                            musicVolume: 50,
+                            soundEffects: true
+                        };
+                    }
+                    applySettings();
+                    updateAll();
+                    updateBalance();
+                }
+            } catch (e) {
+                console.log('Load error:', e);
+            }
+        }
+
+        // ===== ПРИМЕНЕНИЕ НАСТРОЕК =====
+        function applySettings() {
+            const root = document.documentElement;
+            root.style.setProperty('--bg-color', data.settings.bgColor);
+            root.style.setProperty('--text-color', data.settings.textColor);
+            root.style.setProperty('--table-color', data.settings.tableColor);
+            
+            // Обновляем стили для всех элементов
+            document.querySelectorAll('.modal-content').forEach(el => {
+                el.style.backgroundColor = data.settings.bgColor;
+                el.style.color = data.settings.textColor;
+                el.style.borderColor = data.settings.textColor;
+            });
+            
+            document.querySelectorAll('.modal-content input, .modal-content select').forEach(el => {
+                el.style.backgroundColor = data.settings.tableColor;
+                el.style.color = data.settings.textColor;
+                el.style.borderColor = data.settings.textColor;
+            });
+            
+            if (musicAudio) {
+                musicAudio.volume = data.settings.musicVolume / 100;
+            }
+        }
+
+        // ===== ОБНОВЛЕНИЕ ТАБЛИЦ =====
+        function renderTasks() {
+            renderTable('tasksBody', data.tasks, 'tasks', false);
+        }
+
+        function renderCompleted() {
+            renderTable('completedBody', data.completed, 'completed', true);
+        }
+
+        function renderTemp() {
+            renderTable('tempBody', data.tempTasks, 'temp', false);
+        }
+
+        function renderTable(bodyId, tasks, type, isCompleted) {
+            const tbody = document.getElementById(bodyId);
+            if (!tbody) return;
+            
+            // Добавляем пустую строку для создания нового задания
+            const displayTasks = [...tasks];
+            
+            let html = '';
+            displayTasks.forEach((task, index) => {
+                const statusSymbol = task.status ? '✅' : '☐';
+                const rowClass = isCompleted ? 'completed-row' : 'draggable-row';
+                const deadlineHtml = type === 'temp' && task.deadline ? `<td>${task.deadline}</td>` : '';
+                html += `
+                    <tr class="${rowClass}" data-index="${index}" data-type="${type}" draggable="true">
+                        <td style="cursor: grab; text-align: center;">⠿</td>
+                        <td ondblclick="editTask('${type}', ${index}, 'name')">${task.name || 'Новое задание'}</td>
+                        <td ondblclick="editTask('${type}', ${index}, 'reward')">${task.reward}</td>
+                        <td class="status-checkbox" onclick="toggleTask('${type}', ${index})">${statusSymbol}</td>
+                        ${deadlineHtml}
+                    </tr>
+                `;
+            });
+            
+            // Пустая строка для создания
+            const emptyCols = type === 'temp' ? 5 : 4;
+            html += `
+                <tr class="empty-row" onclick="createTask('${type}')">
+                    <td></td>
+                    <td colspan="${emptyCols - 1}" style="text-align: center; color: rgba(255,255,255,0.3);">
+                        ✚ Нажмите для создания нового задания
+                    </td>
+                </tr>
+            `;
+            
+            tbody.innerHTML = html;
+            
+            // Добавляем обработчики drag & drop
+            if (!isCompleted) {
+                setupDragDrop(tbody, type);
+            }
+        }
+
+        // ===== DRAG & DROP =====
+        let dragData = null;
+
+        function setupDragDrop(tbody, type) {
+            const rows = tbody.querySelectorAll('.draggable-row');
+            
+            rows.forEach(row => {
+                row.addEventListener('dragstart', function(e) {
+                    dragData = {
+                        type: type,
+                        index: parseInt(this.dataset.index)
+                    };
+                    this.classList.add('dragging');
+                    e.dataTransfer.effectAllowed = 'move';
+                });
+                
+                row.addEventListener('dragend', function() {
+                    this.classList.remove('dragging');
+                    document.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over'));
+                });
+                
+                row.addEventListener('dragover', function(e) {
+                    e.preventDefault();
+                    e.dataTransfer.dropEffect = 'move';
+                    document.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over'));
+                    this.classList.add('drag-over');
+                });
+                
+                row.addEventListener('dragleave', function() {
+                    this.classList.remove('drag-over');
+                });
+                
+                row.addEventListener('drop', function(e) {
+                    e.preventDefault();
+                    this.classList.remove('drag-over');
+                    if (!dragData) return;
+                    
+                    const targetIndex = parseInt(this.dataset.index);
+                    const sourceType = dragData.type;
+                    const sourceIndex = dragData.index;
+                    
+                    if (sourceType === type && sourceIndex !== targetIndex) {
+                        const taskList = type === 'tasks' ? data.tasks : 
+                                       type === 'temp' ? data.tempTasks : null;
+                        if (taskList) {
+                            const [moved] = taskList.splice(sourceIndex, 1);
+                            taskList.splice(targetIndex, 0, moved);
+                            saveData();
+                            updateAll();
+                            playClickSound();
+                        }
+                    }
+                    dragData = null;
+                });
+            });
+        }
+
+        // ===== ФУНКЦИИ РАБОТЫ С ЗАДАНИЯМИ =====
+        function toggleTask(type, index) {
+            const taskList = type === 'tasks' ? data.tasks : 
+                           type === 'temp' ? data.tempTasks : null;
+            if (!taskList || index >= taskList.length) return;
+            
+            const task = taskList[index];
+            if (task.status) return;
+            
+            task.status = true;
+            data.balance += task.reward;
+            
+            const rewardText = task.reward >= 0 ? `+${task.reward}` : `${task.reward}`;
+            showNotification(`Молодец! Вот твоя награда: ${rewardText} баллов!`);
+            
+            // Добавляем в завершенные
+            data.completed.push({...task, status: true});
+            taskList.splice(index, 1);
+            
+            saveData();
+            updateAll();
+            updateBalance();
+            playClickSound();
+        }
+
+        function createTask(type) {
+            if (type === 'temp') {
+                showTempTaskDialog(null);
+            } else {
+                const newTask = {
+                    name: 'Новое задание',
+                    reward: 0,
+                    status: false
+                };
+                if (type === 'tasks') {
+                    data.tasks.push(newTask);
+                } else if (type === 'temp') {
+                    data.tempTasks.push({...newTask, deadline: ''});
+                }
+                saveData();
+                updateAll();
+                playClickSound();
+            }
+        }
+
+        function editTask(type, index, field) {
+            const taskList = type === 'tasks' ? data.tasks : 
+                           type === 'temp' ? data.tempTasks : null;
+            if (!taskList || index >= taskList.length) return;
+            
+            const task = taskList[index];
+            const currentValue = field === 'name' ? task.name : String(task.reward);
+            const newValue = prompt(`Введите новое ${field === 'name' ? 'название' : 'значение награды'}:`, currentValue);
+            
+            if (newValue !== null) {
+                if (field === 'name') {
+                    task.name = newValue || 'Без названия';
+                } else {
+                    const num = parseInt(newValue);
+                    if (!isNaN(num)) {
+                        task.reward = num;
+                    }
+                }
+                saveData();
+                updateAll();
+                playClickSound();
+            }
+        }
+
+        // ===== ВРЕМЕННЫЕ ЗАДАНИЯ =====
+        function showTempTaskDialog(existingTask) {
+            const modal = document.getElementById('modal');
+            const content = document.getElementById('modalContent');
+            
+            const isEdit = !!existingTask;
+            const task = existingTask || { name: '', reward: 0, deadline: '' };
+            
+            content.innerHTML = `
+                <h2>${isEdit ? 'Редактировать' : 'Новое'} временное задание</h2>
+                <label>Название:</label>
+                <input type="text" id="tempName" value="${task.name || ''}" placeholder="Введите название">
+                <label>Награда:</label>
+                <input type="number" id="tempReward" value="${task.reward || 0}">
+                <label>Дедлайн:</label>
+                <input type="datetime-local" id="tempDeadline" value="${task.deadline || ''}">
+                <div class="buttons">
+                    ${isEdit ? `<button class="btn-danger" onclick="deleteTempTask(${data.tempTasks.indexOf(task)})">Удалить</button>` : ''}
+                    <button class="btn-primary" onclick="saveTempTask(${isEdit})">${isEdit ? 'Сохранить' : 'Создать'}</button>
+                    <button onclick="closeModal()">Отмена</button>
+                </div>
+            `;
+            
+            modal.classList.add('active');
+            
+            // Сохраняем ссылку на задачу для редактирования
+            if (isEdit) {
+                modal.dataset.editIndex = data.tempTasks.indexOf(task);
+            } else {
+                delete modal.dataset.editIndex;
+            }
+        }
+
+        function saveTempTask(isEdit) {
+            const name = document.getElementById('tempName').value || 'Без названия';
+            const reward = parseInt(document.getElementById('tempReward').value) || 0;
+            const deadline = document.getElementById('tempDeadline').value || '';
+            
+            if (isEdit) {
+                const index = parseInt(document.getElementById('modal').dataset.editIndex);
+                if (!isNaN(index) && index >= 0 && index < data.tempTasks.length) {
+                    data.tempTasks[index].name = name;
+                    data.tempTasks[index].reward = reward;
+                    data.tempTasks[index].deadline = deadline;
+                }
+            } else {
+                data.tempTasks.push({
+                    name: name,
+                    reward: reward,
+                    status: false,
+                    deadline: deadline
+                });
+            }
+            
+            saveData();
+            updateAll();
+            closeModal();
+            playClickSound();
+        }
+
+        function deleteTempTask(index) {
+            if (index >= 0 && index < data.tempTasks.length) {
+                data.tempTasks.splice(index, 1);
+                saveData();
+                updateAll();
+                closeModal();
+                playClickSound();
+            }
+        }
+
+        // ===== МАГАЗИН =====
+        function renderStore() {
+            const grid = document.getElementById('storeGrid');
+            if (!grid) return;
+            
+            let html = '';
+            data.store.forEach((item, index) => {
+                html += `
+                    <div class="store-item" onclick="buyStoreItem(${index})" 
+                         oncontextmenu="editStoreItem(${index}); return false;">
+                        <div>${item.icon || '😊'}</div>
+                        <div class="item-name">${item.name || 'Без названия'}</div>
+                        <div style="font-size: 12px;">-${item.cost || 0}</div>
+                    </div>
+                `;
+            });
+            
+            html += `
+                <div class="store-item add-btn" onclick="addStoreItem()">
+                    <div>+</div>
+                </div>
+            `;
+            
+            grid.innerHTML = html;
+        }
+
+        function addStoreItem() {
+            const modal = document.getElementById('modal');
+            const content = document.getElementById('modalContent');
+            
+            content.innerHTML = `
+                <h2>Новое задание в магазине</h2>
+                <label>Иконка (смайлик):</label>
+                <input type="text" id="storeIcon" value="😊" maxlength="2">
+                <label>Название:</label>
+                <input type="text" id="storeName" value="Новое задание">
+                <label>Стоимость:</label>
+                <input type="number" id="storeCost" value="10">
+                <div class="buttons">
+                    <button class="btn-primary" onclick="saveStoreItem()">Создать</button>
+                    <button onclick="closeModal()">Отмена</button>
+                </div>
+            `;
+            
+            modal.classList.add('active');
+        }
+
+        function saveStoreItem() {
+            const icon = document.getElementById('storeIcon').value || '😊';
+            const name = document.getElementById('storeName').value || 'Без названия';
+            const cost = parseInt(document.getElementById('storeCost').value) || 0;
+            
+            data.store.push({ icon, name, cost });
+            saveData();
+            renderStore();
+            closeModal();
+            playClickSound();
+        }
+
+        function editStoreItem(index) {
+            if (index >= data.store.length) return;
+            const item = data.store[index];
+            
+            const modal = document.getElementById('modal');
+            const content = document.getElementById('modalContent');
+            
+            content.innerHTML = `
+                <h2>Редактировать задание в магазине</h2>
+                <label>Иконка (смайлик):</label>
+                <input type="text" id="editStoreIcon" value="${item.icon || '😊'}" maxlength="2">
+                <label>Название:</label>
+                <input type="text" id="editStoreName" value="${item.name || ''}">
+                <label>Стоимость:</label>
+                <input type="number" id="editStoreCost" value="${item.cost || 0}">
+                <div class="buttons">
+                    <button class="btn-danger" onclick="deleteStoreItem(${index})">Удалить</button>
+                    <button class="btn-primary" onclick="updateStoreItem(${index})">Сохранить</button>
+                    <button onclick="closeModal()">Отмена</button>
+                </div>
+            `;
+            
+            modal.classList.add('active');
+        }
+
+        function updateStoreItem(index) {
+            const icon = document.getElementById('editStoreIcon').value || '😊';
+            const name = document.getElementById('editStoreName').value || 'Без названия';
+            const cost = parseInt(document.getElementById('editStoreCost').value) || 0;
+            
+            if (index >= 0 && index < data.store.length) {
+                data.store[index] = { icon, name, cost };
+                saveData();
+                renderStore();
+                closeModal();
+                playClickSound();
+            }
+        }
+
+        function deleteStoreItem(index) {
+            if (index >= 0 && index < data.store.length) {
+                data.store.splice(index, 1);
+                saveData();
+                renderStore();
+                closeModal();
+                playClickSound();
+            }
+        }
+
+        function buyStoreItem(index) {
+            if (index >= data.store.length) return;
+            const item = data.store[index];
+            
+            if (data.balance < item.cost) {
+                showNotification(`Недостаточно баллов! Нужно: ${item.cost}`);
+                return;
+            }
+            
+            data.balance -= item.cost;
+            data.tasks.push({
+                name: item.name,
+                reward: -item.cost,
+                status: false
+            });
+            
+            saveData();
+            updateAll();
+            updateBalance();
+            showNotification(`Вы потратили ${item.cost} баллов на "${item.name}"! Молодцы что накопили на него!`);
+            playClickSound();
+        }
+
+        // ===== ЗАВЕРШЕННЫЕ ЗАДАНИЯ =====
+        let pressTimer = null;
+        let longPressRow = null;
+
+        function setupLongPress() {
+            document.addEventListener('mousedown', function(e) {
+                const row = e.target.closest('.completed-row');
+                if (row) {
+                    longPressRow = row;
+                    pressTimer = setTimeout(() => {
+                        if (longPressRow) {
+                            const index = parseInt(longPressRow.dataset.index);
+                            if (!isNaN(index) && index < data.completed.length) {
+                                if (confirm('Удалить задание?')) {
+                                    data.completed.splice(index, 1);
+                                    saveData();
+                                    updateAll();
+                                    playClickSound();
+                                }
+                            }
+                            longPressRow = null;
+                        }
+                    }, 1500);
+                }
+            });
+            
+            document.addEventListener('mouseup', function() {
+                clearTimeout(pressTimer);
+                longPressRow = null;
+            });
+            
+            document.addEventListener('mouseleave', function() {
+                clearTimeout(pressTimer);
+                longPressRow = null;
+            });
+        }
+
+        // ===== НАСТРОЙКИ =====
+        function openSettings() {
+            const modal = document.getElementById('modal');
+            const content = document.getElementById('modalContent');
+            
+            content.innerHTML = `
+                <h2>Настройки</h2>
+                
+                <div class="settings-group">
+                    <label>Цвет фона:</label>
+                    <div class="color-picker">
+                        <input type="color" id="bgColor" value="${data.settings.bgColor}">
+                    </div>
+                </div>
+                
+                <div class="settings-group">
+                    <label>Цвет текста:</label>
+                    <div class="color-picker">
+                        <input type="color" id="textColor" value="${data.settings.textColor}">
+                    </div>
+                </div>
+                
+                <div class="settings-group">
+                    <label>Цвет таблиц:</label>
+                    <div class="color-picker">
+                        <input type="color" id="tableColor" value="${data.settings.tableColor}">
+                    </div>
+                </div>
+                
+                <div class="settings-group">
+                    <label>Громкость музыки:</label>
+                    <div class="slider-container">
+                        <input type="range" id="musicVolume" min="0" max="100" value="${data.settings.musicVolume}">
+                        <span id="volumeDisplay">${data.settings.musicVolume}%</span>
+                    </div>
+                </div>
+                
+                <div class="checkbox-container">
+                    <input type="checkbox" id="soundEffects" ${data.settings.soundEffects ? 'checked' : ''}>
+                    <label for="soundEffects">Звуковые эффекты</label>
+                </div>
+                
+                <button class="reset-btn" onclick="resetAll()">Сбросить все настройки и данные</button>
+                
+                <div class="buttons" style="margin-top: 20px;">
+                    <button class="btn-primary" onclick="saveSettings()">Сохранить</button>
+                    <button onclick="closeModal()">Закрыть</button>
+                </div>
+            `;
+            
+            // Обработчик для ползунка
+            document.getElementById('musicVolume').addEventListener('input', function() {
+                document.getElementById('volumeDisplay').textContent = this.value + '%';
+            });
+            
+            modal.classList.add('active');
+        }
+
+        function saveSettings() {
+            data.settings.bgColor = document.getElementById('bgColor').value;
+            data.settings.textColor = document.getElementById('textColor').value;
+            data.settings.tableColor = document.getElementById('tableColor').value;
+            data.settings.musicVolume = parseInt(document.getElementById('musicVolume').value);
+            data.settings.soundEffects = document.getElementById('soundEffects').checked;
+            
+            applySettings();
+            saveData();
+            closeModal();
+            
+            if (musicAudio) {
+                musicAudio.volume = data.settings.musicVolume / 100;
+            }
+            
+            playClickSound();
+        }
+
+        function resetAll() {
+            if (confirm('Сбросить все настройки и данные? Это действие необратимо!')) {
+                data = {
+                    tasks: [],
+                    completed: [],
+                    store: [],
+                    tempTasks: [],
+                    balance: 0,
+                    settings: {
+                        bgColor: '#2b2b2b',
+                        textColor: '#ffffff',
+                        tableColor: '#3c3c3c',
+                        musicVolume: 50,
+                        soundEffects: true
+                    }
+                };
+                saveData();
+                applySettings();
+                updateAll();
+                updateBalance();
+                closeModal();
+                playClickSound();
+            }
+        }
+
+        // ===== ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ =====
+        function switchTab(tab) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+            
+            document.getElementById(tab + 'Tab').classList.add('active');
+            document.querySelector(`.tab-btn[data-tab="${tab}"]`).classList.add('active');
+            
+            if (tab === 'store') renderStore();
+            playClickSound();
+        }
+
+        function updateAll() {
+            renderTasks();
+            renderCompleted();
+            renderTemp();
+            renderStore();
+        }
+
+        function updateBalance() {
+            document.getElementById('balanceDisplay').textContent = data.balance;
+        }
+
+        function scrollTable(containerId, direction) {
+            const container = document.getElementById(containerId);
+            if (container) {
+                const scrollAmount = 100 * direction;
+                container.scrollTop += scrollAmount;
+            }
+        }
+
+        function showNotification(message) {
+            const notification = document.getElementById('notification');
+            notification.textContent = message;
+            notification.classList.add('show');
+            clearTimeout(notification.timeout);
+            notification.timeout = setTimeout(() => {
+                notification.classList.remove('show');
+            }, 3000);
+        }
+
+        function closeModal() {
+            document.getElementById('modal').classList.remove('active');
+        }
+
+        // ===== ИНИЦИАЛИЗАЦИЯ =====
+        function init() {
+            loadData();
+            
+            // Если данных нет, создаем демо-данные
+            if (data.tasks.length === 0 && data.completed.length === 0) {
+                data.tasks = [
+                    { name: 'Помыть посуду', reward: 10, status: false },
+                    { name: 'Сделать уроки', reward: 20, status: false }
+                ];
+                data.completed = [
+                    { name: 'Убраться в комнате', reward: 15, status: true }
+                ];
+                data.store = [
+                    { icon: '🎮', name: 'Игра', cost: 50 },
+                    { icon: '📱', name: 'Телефон', cost: 100 }
+                ];
+                saveData();
+            }
+            
+            applySettings();
+            updateAll();
+            updateBalance();
+            setupLongPress();
+            loadMusicFiles();
+            
+            // Автовоспроизведение музыки
+            setTimeout(() => {
+                if (musicFiles.length > 0) {
+                    playSong(0);
+                }
+            }, 1000);
+            
+            // Закрываем модальное окно по клику вне его
+            document.getElementById('modal').addEventListener('click', function(e) {
+                if (e.target === this) closeModal();
+            });
+        }
+
+        // Запуск
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>
