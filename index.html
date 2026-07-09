@@ -28,7 +28,6 @@
             position: relative;
         }
 
-        /* Фон */
         .bg-layer {
             position: fixed;
             top: 0;
@@ -36,7 +35,7 @@
             width: 100%;
             height: 100%;
             z-index: 0;
-            background: var(--bg-color, #2b2b2b);
+            background: #2b2b2b;
         }
 
         .gradient-layer {
@@ -72,7 +71,6 @@
             height: 100vh;
         }
 
-        /* Верхняя панель */
         .top-panel {
             display: flex;
             justify-content: space-between;
@@ -105,7 +103,6 @@
             background: rgba(255, 255, 255, 0.1);
         }
 
-        /* Музыкальный плеер */
         .music-player {
             display: flex;
             justify-content: center;
@@ -131,7 +128,6 @@
             color: var(--bg-color, #2b2b2b);
         }
 
-        /* Вкладки */
         .tabs {
             display: flex;
             gap: 5px;
@@ -161,12 +157,11 @@
             opacity: 0.8;
         }
 
-        /* Контент вкладок */
         .tab-content {
             flex: 1;
             display: none;
             gap: 10px;
-            background: rgba(0, 0, 0, 0.2);
+            background: rgba(0, 0, 0, 0.15);
             backdrop-filter: blur(5px);
             border-radius: 0 0 10px 10px;
             overflow: hidden;
@@ -177,12 +172,12 @@
             display: flex;
         }
 
-        /* Основной контейнер */
         .main-layout {
             display: flex;
             flex: 1;
             gap: 10px;
             overflow: hidden;
+            position: relative;
         }
 
         .table-wrapper {
@@ -197,181 +192,12 @@
         .table-container {
             flex: 1;
             overflow: auto;
-            background: rgba(0, 0, 0, 0.2);
-            border-radius: 5px;
-            position: relative;
-        }
-
-        /* Стрелочки навигации - статичные справа */
-        .table-nav {
-            display: flex;
-            flex-direction: column;
-            position: absolute;
-            right: 5px;
-            bottom: 5px;
-            gap: 3px;
-            z-index: 10;
-        }
-
-        .table-nav button {
-            width: 36px;
-            height: 28px;
-            background: rgba(0, 0, 0, 0.7);
-            backdrop-filter: blur(5px);
-            border: 1px solid var(--text-color, #ffffff);
-            color: var(--text-color, #ffffff);
-            cursor: pointer;
-            border-radius: 3px;
-            font-size: 14px;
-            transition: all 0.3s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .table-nav button:hover {
-            background: var(--text-color, #ffffff);
-            color: var(--bg-color, #2b2b2b);
-        }
-
-        /* Заметки - стикеры */
-        .notes-panel {
-            width: 300px;
-            min-width: 150px;
-            max-width: 500px;
-            background: rgba(0, 0, 0, 0.3);
-            backdrop-filter: blur(5px);
-            border-radius: 10px;
-            padding: 15px;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-            position: relative;
-            transition: width 0.1s;
-        }
-
-        .notes-panel .resize-handle {
-            position: absolute;
-            left: -3px;
-            top: 0;
-            width: 6px;
-            height: 100%;
-            cursor: col-resize;
-            background: transparent;
-        }
-
-        .notes-panel .resize-handle:hover {
-            background: var(--text-color, #ffffff);
-            opacity: 0.3;
-        }
-
-        .notes-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 10px;
-        }
-
-        .notes-header h3 {
-            font-size: 16px;
-        }
-
-        .add-note-btn {
-            background: none;
-            border: 1px solid var(--text-color, #ffffff);
-            color: var(--text-color, #ffffff);
-            padding: 5px 15px;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 14px;
-        }
-
-        .add-note-btn:hover {
-            background: var(--text-color, #ffffff);
-            color: var(--bg-color, #2b2b2b);
-        }
-
-        .notes-list {
-            flex: 1;
-            overflow-y: auto;
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            padding: 5px;
-            min-height: 100px;
-            position: relative;
-        }
-
-        .note-item {
-            background: rgba(255, 255, 255, 0.15);
-            backdrop-filter: blur(5px);
+            background: rgba(0, 0, 0, 0.25);
             border-radius: 8px;
-            padding: 8px;
             position: relative;
-            min-height: 50px;
-            cursor: move;
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.05);
         }
 
-        .note-item:hover {
-            border-color: var(--text-color, #ffffff);
-        }
-
-        .note-item.dragging {
-            opacity: 0.5;
-            transform: scale(0.95);
-        }
-
-        .note-item.drag-over {
-            border-color: var(--text-color, #ffffff);
-            background: rgba(255, 255, 255, 0.25);
-        }
-
-        .note-item textarea {
-            width: 100%;
-            background: transparent;
-            border: none;
-            color: var(--text-color, #ffffff);
-            resize: none;
-            font-family: inherit;
-            font-size: 14px;
-            min-height: 40px;
-            outline: none;
-            padding: 5px;
-        }
-
-        .note-item .note-delete {
-            position: absolute;
-            top: 2px;
-            right: 5px;
-            background: none;
-            border: none;
-            color: var(--text-color, #ffffff);
-            cursor: pointer;
-            font-size: 14px;
-            opacity: 0.5;
-            padding: 2px 5px;
-        }
-
-        .note-item .note-delete:hover {
-            opacity: 1;
-        }
-
-        .note-item .note-resize-handle {
-            position: absolute;
-            bottom: 0;
-            right: 0;
-            width: 15px;
-            height: 15px;
-            cursor: nw-resize;
-            opacity: 0.3;
-        }
-
-        .note-item .note-resize-handle:hover {
-            opacity: 1;
-        }
-
-        /* Таблицы */
         table {
             width: 100%;
             border-collapse: collapse;
@@ -382,7 +208,7 @@
             position: sticky;
             top: 0;
             z-index: 10;
-            background: rgba(0, 0, 0, 0.6);
+            background: rgba(0, 0, 0, 0.5);
             backdrop-filter: blur(5px);
         }
 
@@ -390,13 +216,13 @@
             padding: 10px;
             text-align: left;
             border-bottom: 2px solid var(--text-color, #ffffff);
-            background: rgba(0, 0, 0, 0.4);
+            background: rgba(0, 0, 0, 0.3);
         }
 
         td {
             padding: 10px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-            cursor: pointer;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            cursor: default;
         }
 
         .draggable-row {
@@ -419,18 +245,73 @@
             cursor: pointer;
             font-size: 20px;
             text-align: center;
+            padding: 5px;
+            display: inline-block;
+            width: 30px;
+            height: 30px;
+            line-height: 30px;
+            text-align: center;
+            border-radius: 4px;
+            transition: background 0.2s;
+        }
+
+        .status-checkbox:hover {
+            background: rgba(255, 255, 255, 0.1);
         }
 
         .empty-row td {
             color: rgba(255, 255, 255, 0.3);
             font-style: italic;
+            cursor: pointer;
         }
 
         .completed-row td {
             opacity: 0.7;
         }
 
-        /* Магазин */
+        .completed-row .status-checkbox {
+            cursor: default;
+            opacity: 0.7;
+        }
+
+        .completed-row .status-checkbox:hover {
+            background: none;
+        }
+
+        .status-failed {
+            color: #ff6b6b;
+            text-align: center;
+            font-size: 20px;
+        }
+
+        .status-buttons {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .status-btn {
+            cursor: pointer;
+            font-size: 20px;
+            padding: 2px 8px;
+            border-radius: 4px;
+            transition: background 0.2s;
+            display: inline-block;
+        }
+
+        .status-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .status-btn.complete {
+            color: #51cf66;
+        }
+
+        .status-btn.fail {
+            color: #ff6b6b;
+        }
+
         .store-grid {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
@@ -447,7 +328,7 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            background: rgba(0, 0, 0, 0.3);
+            background: rgba(0, 0, 0, 0.25);
             backdrop-filter: blur(5px);
             border: 2px solid var(--text-color, #ffffff);
             border-radius: 10px;
@@ -480,7 +361,6 @@
             border-style: dashed;
         }
 
-        /* Модальные окна */
         .modal {
             display: none;
             position: fixed;
@@ -499,10 +379,10 @@
         }
 
         .modal-content {
-            background: rgba(0, 0, 0, 0.9);
+            background: rgba(20, 20, 30, 0.95);
             backdrop-filter: blur(10px);
             padding: 30px;
-            border-radius: 10px;
+            border-radius: 12px;
             min-width: 300px;
             max-width: 500px;
             border: 1px solid var(--text-color, #ffffff);
@@ -526,7 +406,7 @@
         .modal-content textarea {
             width: 100%;
             padding: 8px;
-            background: rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.08);
             color: var(--text-color, #ffffff);
             border: 1px solid var(--text-color, #ffffff);
             border-radius: 5px;
@@ -556,6 +436,10 @@
             color: var(--bg-color, #2b2b2b);
         }
 
+        .modal-content .buttons .btn-primary:hover {
+            opacity: 0.8;
+        }
+
         .modal-content .buttons .btn-danger {
             border-color: #ff4444;
             color: #ff4444;
@@ -570,7 +454,6 @@
             opacity: 0.8;
         }
 
-        /* Настройки */
         .settings-group {
             margin: 15px 0;
         }
@@ -602,7 +485,7 @@
             display: flex;
             align-items: center;
             gap: 5px;
-            background: rgba(255,255,255,0.1);
+            background: rgba(255,255,255,0.08);
             padding: 5px;
             border-radius: 5px;
         }
@@ -702,7 +585,6 @@
             opacity: 0.8;
         }
 
-        /* Уведомления */
         .notification {
             position: fixed;
             top: 20px;
@@ -735,30 +617,28 @@
             }
         }
 
-        /* Прокрутка */
         ::-webkit-scrollbar {
-            width: 8px;
-            height: 8px;
+            width: 6px;
+            height: 6px;
         }
 
         ::-webkit-scrollbar-track {
-            background: rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.05);
         }
 
         ::-webkit-scrollbar-thumb {
             background: var(--text-color, #ffffff);
-            border-radius: 4px;
+            border-radius: 3px;
         }
 
         ::-webkit-scrollbar-thumb:hover {
             opacity: 0.8;
         }
 
-        /* Контекстное меню */
         .context-menu {
             display: none;
             position: fixed;
-            background: rgba(0, 0, 0, 0.95);
+            background: rgba(20, 20, 30, 0.95);
             backdrop-filter: blur(10px);
             border: 1px solid var(--text-color, #ffffff);
             border-radius: 8px;
@@ -792,7 +672,142 @@
             background: rgba(255, 68, 68, 0.2);
         }
 
-        /* Адаптивность */
+        /* ЗАМЕТКИ */
+        .notes-container {
+            position: relative;
+            flex: 1;
+            min-height: 300px;
+            background: rgba(0, 0, 0, 0.15);
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            overflow: hidden;
+        }
+
+        .note-item-free {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.12);
+            backdrop-filter: blur(5px);
+            border-radius: 8px;
+            padding: 8px;
+            min-width: 120px;
+            min-height: 50px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            cursor: grab;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            transition: box-shadow 0.2s;
+            z-index: 5;
+        }
+
+        .note-item-free:hover {
+            border-color: var(--text-color, #ffffff);
+            box-shadow: 0 6px 25px rgba(0,0,0,0.3);
+        }
+
+        .note-item-free.dragging {
+            opacity: 0.7;
+            z-index: 10;
+            cursor: grabbing;
+        }
+
+        .note-item-free textarea {
+            width: 100%;
+            background: transparent;
+            border: none;
+            color: var(--text-color, #ffffff);
+            resize: none;
+            font-family: inherit;
+            font-size: 14px;
+            min-height: 40px;
+            outline: none;
+            padding: 5px;
+        }
+
+        .note-item-free .note-delete {
+            position: absolute;
+            top: 2px;
+            right: 5px;
+            background: none;
+            border: none;
+            color: var(--text-color, #ffffff);
+            cursor: pointer;
+            font-size: 14px;
+            opacity: 0.5;
+            padding: 2px 5px;
+        }
+
+        .note-item-free .note-delete:hover {
+            opacity: 1;
+        }
+
+        .note-item-free .note-resize-handle {
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            width: 15px;
+            height: 15px;
+            cursor: nw-resize;
+            opacity: 0.3;
+        }
+
+        .note-item-free .note-resize-handle:hover {
+            opacity: 1;
+        }
+
+        .notes-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 8px 8px 0 0;
+        }
+
+        .notes-header h3 {
+            font-size: 16px;
+        }
+
+        .add-note-btn {
+            background: none;
+            border: 1px solid var(--text-color, #ffffff);
+            color: var(--text-color, #ffffff);
+            padding: 5px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .add-note-btn:hover {
+            background: var(--text-color, #ffffff);
+            color: var(--bg-color, #2b2b2b);
+        }
+
+        .notes-panel {
+            width: 350px;
+            min-width: 250px;
+            max-width: 600px;
+            display: flex;
+            flex-direction: column;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            overflow: hidden;
+        }
+
+        .notes-panel .resize-handle {
+            position: absolute;
+            left: -3px;
+            top: 0;
+            width: 6px;
+            height: 100%;
+            cursor: col-resize;
+            background: transparent;
+        }
+
+        .notes-panel .resize-handle:hover {
+            background: var(--text-color, #ffffff);
+            opacity: 0.3;
+        }
+
         @media (max-width: 768px) {
             .store-grid {
                 grid-template-columns: repeat(3, 1fr);
@@ -827,26 +842,22 @@
 </head>
 <body>
     <div id="app">
-        <!-- Фоновые слои -->
         <div class="bg-layer" id="bgLayer"></div>
         <div class="gradient-layer" id="gradientLayer"></div>
         <div class="image-layer" id="imageLayer"></div>
         
         <div class="app-content">
-            <!-- Верхняя панель -->
             <div class="top-panel">
                 <div class="balance">💰 Баланс: <span id="balanceDisplay">0</span></div>
                 <button class="settings-btn" onclick="openSettings()">⚙️</button>
             </div>
 
-            <!-- Музыкальный плеер -->
             <div class="music-player">
                 <button onclick="prevSong()">⏮</button>
                 <button onclick="togglePlay()" id="playBtn">⏸</button>
                 <button onclick="nextSong()">⏭</button>
             </div>
 
-            <!-- Вкладки -->
             <div class="tabs">
                 <button class="tab-btn active" data-tab="tasks" onclick="switchTab('tasks')">📋 Задания</button>
                 <button class="tab-btn" data-tab="completed" onclick="switchTab('completed')">✅ Завершённые</button>
@@ -854,7 +865,6 @@
                 <button class="tab-btn" data-tab="temp" onclick="switchTab('temp')">⏰ Временные</button>
             </div>
 
-            <!-- Контент -->
             <div id="tasksTab" class="tab-content active">
                 <div class="main-layout">
                     <div class="table-wrapper">
@@ -870,10 +880,6 @@
                                 </thead>
                                 <tbody id="tasksBody"></tbody>
                             </table>
-                            <div class="table-nav">
-                                <button onclick="scrollTable('tasksContainer', -1)">▲</button>
-                                <button onclick="scrollTable('tasksContainer', 1)">▼</button>
-                            </div>
                         </div>
                     </div>
                     <div class="notes-panel" id="notesPanel">
@@ -882,12 +888,11 @@
                             <h3>📝 Заметки</h3>
                             <button class="add-note-btn" onclick="addNote()">+</button>
                         </div>
-                        <div class="notes-list" id="notesList"></div>
+                        <div class="notes-container" id="notesContainer"></div>
                     </div>
                 </div>
             </div>
 
-            <!-- Вкладка Завершённые -->
             <div id="completedTab" class="tab-content">
                 <div class="main-layout">
                     <div class="table-wrapper">
@@ -903,10 +908,6 @@
                                 </thead>
                                 <tbody id="completedBody"></tbody>
                             </table>
-                            <div class="table-nav">
-                                <button onclick="scrollTable('completedContainer', -1)">▲</button>
-                                <button onclick="scrollTable('completedContainer', 1)">▼</button>
-                            </div>
                         </div>
                     </div>
                     <div class="notes-panel">
@@ -915,17 +916,15 @@
                             <h3>📝 Заметки</h3>
                             <button class="add-note-btn" onclick="addNote()">+</button>
                         </div>
-                        <div class="notes-list" id="notesList2"></div>
+                        <div class="notes-container" id="notesContainer2"></div>
                     </div>
                 </div>
             </div>
 
-            <!-- Вкладка Магазин -->
             <div id="storeTab" class="tab-content">
                 <div class="store-grid" id="storeGrid"></div>
             </div>
 
-            <!-- Вкладка Временные -->
             <div id="tempTab" class="tab-content">
                 <div class="main-layout">
                     <div class="table-wrapper">
@@ -936,16 +935,12 @@
                                         <th style="width: 30px;">#</th>
                                         <th>Задания</th>
                                         <th style="width: 100px;">Награда</th>
-                                        <th style="width: 60px;">Статус</th>
+                                        <th style="width: 100px;">Статус</th>
                                         <th style="width: 150px;">Дедлайн</th>
                                     </tr>
                                 </thead>
                                 <tbody id="tempBody"></tbody>
                             </table>
-                            <div class="table-nav">
-                                <button onclick="scrollTable('tempContainer', -1)">▲</button>
-                                <button onclick="scrollTable('tempContainer', 1)">▼</button>
-                            </div>
                         </div>
                     </div>
                     <div class="notes-panel">
@@ -954,29 +949,25 @@
                             <h3>📝 Заметки</h3>
                             <button class="add-note-btn" onclick="addNote()">+</button>
                         </div>
-                        <div class="notes-list" id="notesList3"></div>
+                        <div class="notes-container" id="notesContainer3"></div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Контекстное меню -->
     <div class="context-menu" id="contextMenu">
         <div class="context-menu-item" onclick="contextEdit()">✏️ Редактировать</div>
         <div class="context-menu-item danger" onclick="contextDelete()">🗑️ Удалить</div>
     </div>
 
-    <!-- Модальное окно -->
     <div class="modal" id="modal">
         <div class="modal-content" id="modalContent"></div>
     </div>
 
-    <!-- Уведомление -->
     <div class="notification" id="notification"></div>
 
     <script>
-        // ===== ДАННЫЕ =====
         let data = {
             tasks: [],
             completed: [],
@@ -987,7 +978,6 @@
             settings: {
                 bgColor: '#2b2b2b',
                 textColor: '#ffffff',
-                tableColor: 'rgba(60, 60, 60, 0.6)',
                 gradientColors: ['#2b2b2b', '#1a1a2e'],
                 bgImage: null,
                 musicVolume: 50,
@@ -995,11 +985,10 @@
             }
         };
 
-        let contextTarget = null;
         let contextType = null;
         let contextIndex = null;
+        let isContextOpen = false;
 
-        // ===== ЗВУК =====
         let audioContext = null;
 
         function playClickSound() {
@@ -1017,17 +1006,9 @@
                 gainNode.gain.value = 0.08;
                 oscillator.start();
                 oscillator.stop(audioContext.currentTime + 0.05);
-            } catch (e) {
-                console.log('Sound error:', e);
-            }
+            } catch (e) {}
         }
 
-        // Глобальный обработчик для всех кликов
-        document.addEventListener('click', function() {
-            playClickSound();
-        });
-
-        // ===== МУЗЫКА =====
         let musicFiles = [];
         let currentMusicIndex = 0;
         let isPlaying = false;
@@ -1066,9 +1047,7 @@
         }
 
         function playSong(index) {
-            if (musicFiles.length === 0 || index >= musicFiles.length) {
-                return;
-            }
+            if (musicFiles.length === 0 || index >= musicFiles.length) return;
             try {
                 if (musicAudio) {
                     musicAudio.pause();
@@ -1084,9 +1063,7 @@
                 currentMusicIndex = index;
                 isPlaying = true;
                 document.getElementById('playBtn').textContent = '⏸';
-            } catch (e) {
-                console.log('Play error:', e);
-            }
+            } catch (e) {}
         }
 
         function togglePlay() {
@@ -1129,13 +1106,10 @@
             }
         }
 
-        // ===== СОХРАНЕНИЕ =====
         function saveData() {
             try {
                 localStorage.setItem('taskManagerData', JSON.stringify(data));
-            } catch (e) {
-                console.log('Save error:', e);
-            }
+            } catch (e) {}
         }
 
         function loadData() {
@@ -1150,36 +1124,26 @@
                         data.settings = {
                             bgColor: '#2b2b2b',
                             textColor: '#ffffff',
-                            tableColor: 'rgba(60, 60, 60, 0.6)',
                             gradientColors: ['#2b2b2b', '#1a1a2e'],
                             bgImage: null,
                             musicVolume: 50,
                             soundEffects: true
                         };
                     }
-                    if (!data.settings.gradientColors) {
+                    if (!data.settings.gradientColors || data.settings.gradientColors.length === 0) {
                         data.settings.gradientColors = ['#2b2b2b', '#1a1a2e'];
-                    }
-                    if (!data.settings.tableColor) {
-                        data.settings.tableColor = 'rgba(60, 60, 60, 0.6)';
                     }
                     applySettings();
                     updateAll();
                     updateBalance();
                 }
-            } catch (e) {
-                console.log('Load error:', e);
-            }
+            } catch (e) {}
         }
 
-        // ===== ПРИМЕНЕНИЕ НАСТРОЕК =====
         function applySettings() {
-            const root = document.documentElement;
+            // Фон всегда #2b2b2b
+            document.getElementById('bgLayer').style.backgroundColor = '#2b2b2b';
             
-            // Основной цвет фона
-            document.getElementById('bgLayer').style.backgroundColor = data.settings.bgColor;
-            
-            // Градиент
             const gradientLayer = document.getElementById('gradientLayer');
             if (data.settings.gradientColors && data.settings.gradientColors.length > 1) {
                 const gradient = `linear-gradient(to bottom, ${data.settings.gradientColors.join(', ')})`;
@@ -1189,7 +1153,6 @@
                 gradientLayer.style.display = 'none';
             }
             
-            // Фоновое изображение
             const imageLayer = document.getElementById('imageLayer');
             if (data.settings.bgImage) {
                 imageLayer.style.backgroundImage = `url(${data.settings.bgImage})`;
@@ -1198,83 +1161,94 @@
                 imageLayer.style.display = 'none';
             }
             
-            // Цвет текста
-            root.style.setProperty('--text-color', data.settings.textColor);
-            
-            // Цвет таблиц (полупрозрачный)
-            root.style.setProperty('--table-color', data.settings.tableColor);
-            
-            // Применяем цвет таблиц
-            document.querySelectorAll('.table-container, .store-item, .notes-panel, .modal-content').forEach(el => {
-                el.style.backgroundColor = data.settings.tableColor;
-            });
-            
-            // Музыка
+            document.documentElement.style.setProperty('--text-color', data.settings.textColor);
             updateMusicVolume();
         }
 
-        // ===== ОБНОВЛЕНИЕ ТАБЛИЦ =====
         function renderTasks() {
-            renderTable('tasksBody', data.tasks, 'tasks', false);
+            renderTable('tasksBody', data.tasks, 'tasks', false, true);
         }
 
         function renderCompleted() {
-            renderTable('completedBody', data.completed, 'completed', true);
+            renderTable('completedBody', data.completed, 'completed', true, false);
         }
 
         function renderTemp() {
-            renderTable('tempBody', data.tempTasks, 'temp', false);
+            renderTable('tempBody', data.tempTasks, 'temp', false, true);
         }
 
-        function renderTable(bodyId, tasks, type, isCompleted) {
+        function renderTable(bodyId, tasks, type, isCompleted, showEmpty) {
             const tbody = document.getElementById(bodyId);
             if (!tbody) return;
             
             let html = '';
             tasks.forEach((task, index) => {
-                const statusSymbol = task.status ? '✅' : '☐';
+                let statusHtml = '';
+                if (type === 'temp') {
+                    if (task.status === 'failed') {
+                        statusHtml = `<td class="status-failed">❌</td>`;
+                    } else if (task.status === true) {
+                        statusHtml = `<td style="text-align:center; font-size:20px;">✅</td>`;
+                    } else {
+                        statusHtml = `
+                            <td>
+                                <div class="status-buttons">
+                                    <span class="status-btn complete" onclick="toggleTask('temp', ${index})">☐</span>
+                                    <span class="status-btn fail" onclick="failTask(${index})">✕</span>
+                                </div>
+                            </td>
+                        `;
+                    }
+                } else {
+                    const statusSymbol = task.status ? '✅' : '☐';
+                    const clickHandler = isCompleted ? '' : `onclick="toggleTask('${type}', ${index})"`;
+                    statusHtml = `<td><span class="status-checkbox" ${clickHandler}>${statusSymbol}</span></td>`;
+                }
+                
                 const rowClass = isCompleted ? 'completed-row' : 'draggable-row';
                 const deadlineHtml = type === 'temp' && task.deadline ? `<td>${task.deadline}</td>` : '';
                 const rewardDisplay = task.reward < 0 ? task.reward : `+${task.reward}`;
+                
+                // Для завершённых заданий убираем перетаскивание и контекстное меню
+                let rowAttrs = `class="${rowClass}" data-index="${index}" data-type="${type}"`;
+                if (!isCompleted) {
+                    rowAttrs += ` draggable="true" oncontextmenu="openContextMenu(event, '${type}', ${index})"`;
+                }
+                
                 html += `
-                    <tr class="${rowClass}" data-index="${index}" data-type="${type}" draggable="true"
-                        oncontextmenu="openContextMenu(event, '${type}', ${index})">
-                        <td style="cursor: grab; text-align: center;">⠿</td>
-                        <td ondblclick="editTask('${type}', ${index}, 'name')">${task.name || 'Новое задание'}</td>
-                        <td ondblclick="editTask('${type}', ${index}, 'reward')">${rewardDisplay}</td>
-                        <td class="status-checkbox" onclick="toggleTask('${type}', ${index})">${statusSymbol}</td>
+                    <tr ${rowAttrs}>
+                        ${!isCompleted ? `<td style="cursor: grab; text-align: center;">⠿</td>` : `<td style="text-align: center;">${index + 1}</td>`}
+                        <td ${isCompleted ? '' : `ondblclick="editTask('${type}', ${index}, 'name')"`}>${task.name || 'Новое задание'}</td>
+                        <td ${isCompleted ? '' : `ondblclick="editTask('${type}', ${index}, 'reward')"`}>${rewardDisplay}</td>
+                        ${statusHtml}
                         ${deadlineHtml}
                     </tr>
                 `;
             });
             
-            // Пустая строка для создания
-            const emptyCols = type === 'temp' ? 5 : 4;
-            html += `
-                <tr class="empty-row" onclick="createTask('${type}')">
-                    <td></td>
-                    <td colspan="${emptyCols - 1}" style="text-align: center; color: rgba(255,255,255,0.3);">
-                        ✚ Нажмите для создания нового задания
-                    </td>
-                </tr>
-            `;
+            if (showEmpty) {
+                const emptyCols = type === 'temp' ? 5 : 4;
+                const emptyClick = type === 'temp' ? `onclick="showTempTaskDialog(null)"` : `onclick="createTask('${type}')"`;
+                html += `
+                    <tr class="empty-row" ${emptyClick}>
+                        <td></td>
+                        <td colspan="${emptyCols - 1}" style="text-align: center; color: rgba(255,255,255,0.3);">
+                            ✚ Нажмите для создания нового задания
+                        </td>
+                    </tr>
+                `;
+            }
             
             tbody.innerHTML = html;
             
             if (!isCompleted) {
                 setupDragDrop(tbody, type);
-            }
-            
-            // Добавляем обработчики для долгого нажатия
-            if (!isCompleted) {
                 setupLongPress(tbody, type);
             }
         }
 
-        // ===== ДОЛГОЕ НАЖАТИЕ =====
         let longPressTimer = null;
         let longPressTarget = null;
-        let isContextOpen = false;
 
         function setupLongPress(tbody, type) {
             const rows = tbody.querySelectorAll('.draggable-row');
@@ -1306,9 +1280,9 @@
             });
         }
 
-        // ===== КОНТЕКСТНОЕ МЕНЮ =====
         function openContextMenu(event, type, index) {
             event.preventDefault();
+            event.stopPropagation();
             const menu = document.getElementById('contextMenu');
             contextType = type;
             contextIndex = index;
@@ -1316,7 +1290,6 @@
             let x = event.clientX;
             let y = event.clientY;
             
-            // Корректируем позицию, чтобы меню не выходило за экран
             if (x + 200 > window.innerWidth) x = window.innerWidth - 200;
             if (y + 100 > window.innerHeight) y = window.innerHeight - 100;
             
@@ -1329,46 +1302,50 @@
         function closeContextMenu() {
             document.getElementById('contextMenu').classList.remove('active');
             isContextOpen = false;
-            contextTarget = null;
-            contextType = null;
-            contextIndex = null;
         }
 
         function contextEdit() {
+            const type = contextType;
+            const index = contextIndex;
             closeContextMenu();
-            if (contextType && contextIndex !== null) {
-                const taskList = contextType === 'tasks' ? data.tasks : 
-                               contextType === 'temp' ? data.tempTasks : null;
-                if (taskList && contextIndex < taskList.length) {
-                    if (contextType === 'temp') {
-                        showTempTaskDialog(contextIndex);
-                    } else {
-                        const task = taskList[contextIndex];
-                        showEditTaskDialog(contextType, contextIndex);
-                    }
+            
+            if (type && index !== null && index !== undefined) {
+                if (type === 'store') {
+                    editStoreItem(index);
+                } else if (type === 'temp') {
+                    showTempTaskDialog(index);
+                } else if (type === 'tasks') {
+                    showEditTaskDialog('tasks', index);
                 }
             }
         }
 
         function contextDelete() {
-            closeContextMenu();
-            if (contextType && contextIndex !== null) {
+            const type = contextType;
+            const index = contextIndex;
+            
+            if (type && index !== null && index !== undefined) {
                 if (confirm('🗑️ Удалить это задание?')) {
-                    const taskList = contextType === 'tasks' ? data.tasks : 
-                                   contextType === 'temp' ? data.tempTasks : null;
-                    if (taskList && contextIndex < taskList.length) {
-                        taskList.splice(contextIndex, 1);
-                        saveData();
-                        updateAll();
+                    if (type === 'store') {
+                        data.store.splice(index, 1);
+                        showNotification('✅ Задание удалено!');
+                    } else if (type === 'tasks') {
+                        data.tasks.splice(index, 1);
+                        showNotification('✅ Задание удалено!');
+                    } else if (type === 'temp') {
+                        data.tempTasks.splice(index, 1);
+                        showNotification('✅ Задание удалено!');
                     }
+                    saveData();
+                    updateAll();
+                    playClickSound();
                 }
             }
+            closeContextMenu();
         }
 
-        // ===== ДИАЛОГ РЕДАКТИРОВАНИЯ =====
         function showEditTaskDialog(type, index) {
-            const taskList = type === 'tasks' ? data.tasks : 
-                           type === 'temp' ? data.tempTasks : null;
+            const taskList = type === 'tasks' ? data.tasks : data.tempTasks;
             if (!taskList || index >= taskList.length) return;
             
             const task = taskList[index];
@@ -1395,8 +1372,7 @@
         }
 
         function saveEditTask(type, index) {
-            const taskList = type === 'tasks' ? data.tasks : 
-                           type === 'temp' ? data.tempTasks : null;
+            const taskList = type === 'tasks' ? data.tasks : data.tempTasks;
             if (!taskList || index >= taskList.length) return;
             
             const task = taskList[index];
@@ -1414,9 +1390,10 @@
             saveData();
             updateAll();
             closeModal();
+            playClickSound();
+            showNotification('✅ Задание обновлено!');
         }
 
-        // ===== DRAG & DROP =====
         let dragData = null;
 
         function setupDragDrop(tbody, type) {
@@ -1455,8 +1432,7 @@
                     const sourceIndex = dragData.index;
                     
                     if (sourceType === type && sourceIndex !== targetIndex) {
-                        const taskList = type === 'tasks' ? data.tasks : 
-                                       type === 'temp' ? data.tempTasks : null;
+                        const taskList = type === 'tasks' ? data.tasks : data.tempTasks;
                         if (taskList) {
                             const [moved] = taskList.splice(sourceIndex, 1);
                             taskList.splice(targetIndex, 0, moved);
@@ -1469,16 +1445,13 @@
             });
         }
 
-        // ===== ФУНКЦИИ РАБОТЫ С ЗАДАНИЯМИ =====
         function toggleTask(type, index) {
-            const taskList = type === 'tasks' ? data.tasks : 
-                           type === 'temp' ? data.tempTasks : null;
+            const taskList = type === 'tasks' ? data.tasks : data.tempTasks;
             if (!taskList || index >= taskList.length) return;
             
             const task = taskList[index];
             if (task.status) return;
             
-            // Проверяем дедлайн для временных заданий
             if (type === 'temp' && task.deadline) {
                 const now = new Date();
                 const deadline = new Date(task.deadline);
@@ -1494,7 +1467,6 @@
             
             task.status = true;
             
-            // Тратим баллы только если награда отрицательная
             if (task.reward < 0) {
                 if (data.balance < Math.abs(task.reward)) {
                     showNotification(`❌ Недостаточно баллов! Нужно: ${Math.abs(task.reward)}`);
@@ -1509,31 +1481,65 @@
                 showNotification(`🎉 Молодец! Вот твоя награда: ${rewardText} баллов!`);
             }
             
-            // Добавляем в завершенные
             data.completed.push({...task, status: true});
             taskList.splice(index, 1);
             
             saveData();
             updateAll();
             updateBalance();
+            playClickSound();
+        }
+
+        function failTask(index) {
+            if (index >= data.tempTasks.length) return;
+            const task = data.tempTasks[index];
+            showNotification('😊 Ничего страшного, в следующий раз!');
+            data.tempTasks.splice(index, 1);
+            saveData();
+            updateAll();
+            playClickSound();
         }
 
         function createTask(type) {
             if (type === 'temp') {
                 showTempTaskDialog(null);
             } else {
-                const newTask = { name: 'Новое задание', reward: 0, status: false };
-                if (type === 'tasks') {
-                    data.tasks.push(newTask);
-                }
-                saveData();
-                updateAll();
+                const modal = document.getElementById('modal');
+                const content = document.getElementById('modalContent');
+                
+                content.innerHTML = `
+                    <h2>➕ Новое задание</h2>
+                    <label>Название:</label>
+                    <input type="text" id="newTaskName" value="Новое задание">
+                    <label>Награда:</label>
+                    <input type="number" id="newTaskReward" value="0">
+                    <div class="buttons">
+                        <button class="btn-primary" onclick="saveNewTask('${type}')">➕ Создать</button>
+                        <button onclick="closeModal()">❌ Отмена</button>
+                    </div>
+                `;
+                
+                modal.classList.add('active');
             }
         }
 
+        function saveNewTask(type) {
+            const name = document.getElementById('newTaskName').value || 'Без названия';
+            const reward = parseInt(document.getElementById('newTaskReward').value) || 0;
+            
+            if (type === 'tasks') {
+                data.tasks.push({ name, reward, status: false });
+            }
+            
+            saveData();
+            updateAll();
+            closeModal();
+            playClickSound();
+            showNotification('✅ Задание создано!');
+        }
+
         function editTask(type, index, field) {
-            const taskList = type === 'tasks' ? data.tasks : 
-                           type === 'temp' ? data.tempTasks : null;
+            const taskList = type === 'tasks' ? data.tasks : data.tempTasks;
             if (!taskList || index >= taskList.length) return;
             
             const task = taskList[index];
@@ -1551,10 +1557,11 @@
                 }
                 saveData();
                 updateAll();
+                playClickSound();
+                showNotification('✅ Задание обновлено!');
             }
         }
 
-        // ===== ВРЕМЕННЫЕ ЗАДАНИЯ =====
         function showTempTaskDialog(editIndex) {
             const modal = document.getElementById('modal');
             const content = document.getElementById('modalContent');
@@ -1571,7 +1578,6 @@
                 <label>Дедлайн:</label>
                 <input type="datetime-local" id="tempDeadline" value="${task.deadline || ''}">
                 <div class="buttons">
-                    ${isEdit ? `<button class="btn-danger" onclick="deleteTempTask(${editIndex})">🗑️ Удалить</button>` : ''}
                     <button class="btn-primary" onclick="saveTempTask(${isEdit}, ${editIndex})">${isEdit ? '💾 Сохранить' : '➕ Создать'}</button>
                     <button onclick="closeModal()">❌ Отмена</button>
                 </div>
@@ -1594,18 +1600,10 @@
             saveData();
             updateAll();
             closeModal();
+            playClickSound();
+            showNotification(isEdit ? '✅ Задание обновлено!' : '✅ Задание создано!');
         }
 
-        function deleteTempTask(index) {
-            if (index >= 0 && index < data.tempTasks.length) {
-                data.tempTasks.splice(index, 1);
-                saveData();
-                updateAll();
-                closeModal();
-            }
-        }
-
-        // ===== МАГАЗИН =====
         function renderStore() {
             const grid = document.getElementById('storeGrid');
             if (!grid) return;
@@ -1615,7 +1613,7 @@
                 const costDisplay = `-${item.cost || 0}`;
                 html += `
                     <div class="store-item" onclick="buyStoreItem(${index})" 
-                         oncontextmenu="openStoreContextMenu(event, ${index}); return false;">
+                         oncontextmenu="openContextMenu(event, 'store', ${index}); return false;">
                         <div>${item.icon || '😊'}</div>
                         <div class="item-name">${item.name || 'Без названия'}</div>
                         <div class="item-cost">${costDisplay}</div>
@@ -1631,7 +1629,6 @@
             
             grid.innerHTML = html;
             
-            // Добавляем долгое нажатие для магазина
             const items = grid.querySelectorAll('.store-item:not(.add-btn)');
             items.forEach((item, index) => {
                 let timer = null;
@@ -1639,7 +1636,7 @@
                     timer = setTimeout(() => {
                         if (!isContextOpen) {
                             isContextOpen = true;
-                            openStoreContextMenu(e, index);
+                            openContextMenu(e, 'store', index);
                         }
                     }, 600);
                 });
@@ -1652,24 +1649,6 @@
             });
         }
 
-        function openStoreContextMenu(event, index) {
-            event.preventDefault();
-            const menu = document.getElementById('contextMenu');
-            contextType = 'store';
-            contextIndex = index;
-            
-            let x = event.clientX;
-            let y = event.clientY;
-            
-            if (x + 200 > window.innerWidth) x = window.innerWidth - 200;
-            if (y + 100 > window.innerHeight) y = window.innerHeight - 100;
-            
-            menu.style.left = x + 'px';
-            menu.style.top = y + 'px';
-            menu.classList.add('active');
-            isContextOpen = true;
-        }
-
         function addStoreItem() {
             const modal = document.getElementById('modal');
             const content = document.getElementById('modalContent');
@@ -1680,8 +1659,9 @@
                 <input type="text" id="storeIcon" value="😊" maxlength="2">
                 <label>Название:</label>
                 <input type="text" id="storeName" value="Новое задание">
-                <label>Стоимость (без минуса):</label>
-                <input type="number" id="storeCost" value="10">
+                <label>Стоимость (в баллах):</label>
+                <input type="number" id="storeCost" value="10" min="1">
+                <div style="font-size:12px; opacity:0.7; margin-top:5px;">⚠️ Цена всегда будет с минусом (-)</div>
                 <div class="buttons">
                     <button class="btn-primary" onclick="saveStoreItem()">➕ Создать</button>
                     <button onclick="closeModal()">❌ Отмена</button>
@@ -1694,12 +1674,14 @@
         function saveStoreItem() {
             const icon = document.getElementById('storeIcon').value || '😊';
             const name = document.getElementById('storeName').value || 'Без названия';
-            const cost = parseInt(document.getElementById('storeCost').value) || 0;
+            const cost = Math.max(1, parseInt(document.getElementById('storeCost').value) || 1);
             
             data.store.push({ icon, name, cost });
             saveData();
             renderStore();
             closeModal();
+            playClickSound();
+            showNotification('✅ Задание добавлено в магазин!');
         }
 
         function editStoreItem(index) {
@@ -1715,10 +1697,10 @@
                 <input type="text" id="editStoreIcon" value="${item.icon || '😊'}" maxlength="2">
                 <label>Название:</label>
                 <input type="text" id="editStoreName" value="${item.name || ''}">
-                <label>Стоимость (без минуса):</label>
-                <input type="number" id="editStoreCost" value="${item.cost || 0}">
+                <label>Стоимость (в баллах):</label>
+                <input type="number" id="editStoreCost" value="${item.cost || 1}" min="1">
+                <div style="font-size:12px; opacity:0.7; margin-top:5px;">⚠️ Цена всегда будет с минусом (-)</div>
                 <div class="buttons">
-                    <button class="btn-danger" onclick="deleteStoreItem(${index})">🗑️ Удалить</button>
                     <button class="btn-primary" onclick="updateStoreItem(${index})">💾 Сохранить</button>
                     <button onclick="closeModal()">❌ Отмена</button>
                 </div>
@@ -1730,22 +1712,15 @@
         function updateStoreItem(index) {
             const icon = document.getElementById('editStoreIcon').value || '😊';
             const name = document.getElementById('editStoreName').value || 'Без названия';
-            const cost = parseInt(document.getElementById('editStoreCost').value) || 0;
+            const cost = Math.max(1, parseInt(document.getElementById('editStoreCost').value) || 1);
             
             if (index >= 0 && index < data.store.length) {
                 data.store[index] = { icon, name, cost };
                 saveData();
                 renderStore();
                 closeModal();
-            }
-        }
-
-        function deleteStoreItem(index) {
-            if (index >= 0 && index < data.store.length) {
-                data.store.splice(index, 1);
-                saveData();
-                renderStore();
-                closeModal();
+                playClickSound();
+                showNotification('✅ Задание в магазине обновлено!');
             }
         }
 
@@ -1762,9 +1737,9 @@
             saveData();
             updateAll();
             showNotification(`📋 Задание "${item.name}" добавлено в список! Выполните его чтобы потратить ${item.cost} баллов.`);
+            playClickSound();
         }
 
-        // ===== ЗАВЕРШЕННЫЕ ЗАДАНИЯ =====
         function setupCompletedLongPress() {
             const container = document.getElementById('completedContainer');
             if (!container) return;
@@ -1784,6 +1759,8 @@
                                     data.completed.splice(index, 1);
                                     saveData();
                                     updateAll();
+                                    playClickSound();
+                                    showNotification('✅ Задание удалено!');
                                 }
                             }
                             target = null;
@@ -1803,82 +1780,95 @@
             });
         }
 
-        // ===== ЗАМЕТКИ (стикеры) =====
+        // ===== ЗАМЕТКИ =====
         let noteDragData = null;
 
         function renderNotes() {
-            const lists = document.querySelectorAll('.notes-list');
-            lists.forEach(list => {
-                list.innerHTML = '';
+            const containers = document.querySelectorAll('.notes-container');
+            containers.forEach(container => {
+                container.innerHTML = '';
                 data.notes.forEach((note, index) => {
                     const div = document.createElement('div');
-                    div.className = 'note-item';
+                    div.className = 'note-item-free';
                     div.dataset.index = index;
-                    div.draggable = true;
-                    div.style.width = note.width || 'auto';
-                    div.style.height = note.height ? note.height + 'px' : 'auto';
+                    div.style.left = (note.x || 10 + index * 15) + 'px';
+                    div.style.top = (note.y || 10 + index * 20) + 'px';
+                    div.style.width = (note.width || 180) + 'px';
+                    div.style.height = (note.height || 120) + 'px';
                     div.innerHTML = `
                         <button class="note-delete" onclick="deleteNote(${index})">✕</button>
                         <textarea oninput="updateNoteText(${index}, this.value)" 
-                                  style="min-height: ${note.height || 40}px;">${note.text || ''}</textarea>
+                                  style="min-height: ${(note.height || 120) - 20}px;">${note.text || ''}</textarea>
                         <div class="note-resize-handle" onmousedown="startNoteResize(event, ${index})"></div>
                     `;
                     
-                    // Drag & Drop для заметок
-                    div.addEventListener('dragstart', function(e) {
-                        noteDragData = { index: parseInt(this.dataset.index) };
-                        this.classList.add('dragging');
-                        e.dataTransfer.effectAllowed = 'move';
-                    });
+                    // Перетаскивание заметок
+                    let isDragging = false;
+                    let startX, startY, origX, origY;
                     
-                    div.addEventListener('dragend', function() {
-                        this.classList.remove('dragging');
-                        document.querySelectorAll('.note-item.drag-over').forEach(el => el.classList.remove('drag-over'));
-                    });
-                    
-                    div.addEventListener('dragover', function(e) {
-                        e.preventDefault();
-                        e.dataTransfer.dropEffect = 'move';
-                        document.querySelectorAll('.note-item.drag-over').forEach(el => el.classList.remove('drag-over'));
-                        this.classList.add('drag-over');
-                    });
-                    
-                    div.addEventListener('dragleave', function() {
-                        this.classList.remove('drag-over');
-                    });
-                    
-                    div.addEventListener('drop', function(e) {
-                        e.preventDefault();
-                        this.classList.remove('drag-over');
-                        if (!noteDragData) return;
+                    div.addEventListener('mousedown', function(e) {
+                        if (e.target.closest('.note-delete') || e.target.closest('.note-resize-handle') || e.target.tagName === 'TEXTAREA') return;
                         
-                        const fromIndex = noteDragData.index;
-                        const toIndex = parseInt(this.dataset.index);
-                        
-                        if (fromIndex !== toIndex) {
-                            const [moved] = data.notes.splice(fromIndex, 1);
-                            data.notes.splice(toIndex, 0, moved);
-                            saveData();
-                            renderNotes();
+                        isDragging = true;
+                        startX = e.clientX;
+                        startY = e.clientY;
+                        origX = parseInt(div.style.left);
+                        origY = parseInt(div.style.top);
+                        div.classList.add('dragging');
+                        div.style.zIndex = 10;
+                        e.preventDefault();
+                    });
+                    
+                    document.addEventListener('mousemove', function(e) {
+                        if (!isDragging) return;
+                        const dx = e.clientX - startX;
+                        const dy = e.clientY - startY;
+                        const containerRect = container.getBoundingClientRect();
+                        const newX = Math.max(0, Math.min(containerRect.width - parseInt(div.style.width) || 180, origX + dx));
+                        const newY = Math.max(0, Math.min(containerRect.height - parseInt(div.style.height) || 120, origY + dy));
+                        div.style.left = newX + 'px';
+                        div.style.top = newY + 'px';
+                        if (index < data.notes.length) {
+                            data.notes[index].x = newX;
+                            data.notes[index].y = newY;
                         }
-                        noteDragData = null;
                     });
                     
-                    list.appendChild(div);
+                    document.addEventListener('mouseup', function() {
+                        if (isDragging) {
+                            isDragging = false;
+                            div.classList.remove('dragging');
+                            div.style.zIndex = 5;
+                            saveData();
+                        }
+                    });
+                    
+                    container.appendChild(div);
                 });
             });
         }
 
         function addNote() {
-            data.notes.push({ text: 'Новая заметка...', height: 60, width: null });
+            const maxX = Math.max(0, ...data.notes.map(n => n.x || 0));
+            const maxY = Math.max(0, ...data.notes.map(n => n.y || 0));
+            data.notes.push({ 
+                text: 'Новая заметка...', 
+                x: maxX + 20, 
+                y: maxY + 20, 
+                width: 180, 
+                height: 120 
+            });
             saveData();
             renderNotes();
+            playClickSound();
         }
 
         function deleteNote(index) {
             data.notes.splice(index, 1);
             saveData();
             renderNotes();
+            playClickSound();
+            showNotification('✅ Заметка удалена!');
         }
 
         function updateNoteText(index, text) {
@@ -1890,11 +1880,12 @@
 
         function startNoteResize(event, index) {
             event.preventDefault();
-            const note = event.target.closest('.note-item');
+            event.stopPropagation();
+            const note = event.target.closest('.note-item-free');
             const startX = event.clientX;
             const startY = event.clientY;
-            const startWidth = note.offsetWidth;
-            const startHeight = note.offsetHeight;
+            const startWidth = parseInt(note.style.width) || 180;
+            const startHeight = parseInt(note.style.height) || 120;
             
             function onMove(e) {
                 const newWidth = Math.max(100, startWidth + (e.clientX - startX));
@@ -1917,7 +1908,6 @@
             document.addEventListener('mouseup', onUp);
         }
 
-        // ===== РЕСАЙЗ ПАНЕЛИ ЗАМЕТОК =====
         function setupNotePanelResize() {
             const handles = document.querySelectorAll('.resize-handle');
             handles.forEach(handle => {
@@ -1928,7 +1918,7 @@
                     const startWidth = panel.offsetWidth;
                     
                     function onMove(ev) {
-                        const newWidth = Math.max(150, Math.min(500, startWidth + (startX - ev.clientX)));
+                        const newWidth = Math.max(250, Math.min(600, startWidth + (startX - ev.clientX)));
                         panel.style.width = newWidth + 'px';
                     }
                     
@@ -1943,30 +1933,25 @@
             });
         }
 
-        // ===== НАСТРОЙКИ =====
         function openSettings() {
             const modal = document.getElementById('modal');
             const content = document.getElementById('modalContent');
             
             const gradientColors = data.settings.gradientColors || ['#2b2b2b', '#1a1a2e'];
-            let gradientHtml = gradientColors.map((color, i) => `
-                <div class="color-input-wrapper">
-                    <input type="color" value="${color}" onchange="updateGradientColor(${i}, this.value)">
-                    <button class="color-move-btn" onclick="moveGradientColor(${i}, -1)" ${i === 0 ? 'disabled' : ''}>⬆</button>
-                    <button class="color-move-btn" onclick="moveGradientColor(${i}, 1)" ${i === gradientColors.length - 1 ? 'disabled' : ''}>⬇</button>
-                    <button class="remove-gradient-btn" onclick="removeGradientColor(${i})">✕</button>
-                </div>
-            `).join('');
+            let gradientHtml = '';
+            if (gradientColors.length > 0) {
+                gradientHtml = gradientColors.map((color, i) => `
+                    <div class="color-input-wrapper">
+                        <input type="color" value="${color}" onchange="updateGradientColor(${i}, this.value)">
+                        <button class="color-move-btn" onclick="moveGradientColor(${i}, -1)" ${i === 0 ? 'disabled' : ''}>⬆</button>
+                        <button class="color-move-btn" onclick="moveGradientColor(${i}, 1)" ${i === gradientColors.length - 1 ? 'disabled' : ''}>⬇</button>
+                        <button class="remove-gradient-btn" onclick="removeGradientColor(${i})">✕</button>
+                    </div>
+                `).join('');
+            }
             
             content.innerHTML = `
                 <h2>⚙️ Настройки</h2>
-                
-                <div class="settings-group">
-                    <label>Основной цвет фона:</label>
-                    <div class="color-picker">
-                        <input type="color" id="bgColor" value="${data.settings.bgColor}">
-                    </div>
-                </div>
                 
                 <div class="settings-group">
                     <label>Цвет текста:</label>
@@ -1976,24 +1961,16 @@
                 </div>
                 
                 <div class="settings-group">
-                    <label>Цвет таблиц (полупрозрачный):</label>
-                    <div class="color-picker">
-                        <input type="color" id="tableColor" value="${data.settings.tableColor.replace(/[^0-9a-f]/gi, '') || '3c3c3c'}">
-                        <span style="opacity:0.7; font-size:12px;">Прозрачность: 60%</span>
-                    </div>
-                </div>
-                
-                <div class="settings-group">
                     <label>Градиент фона (сверху вниз):</label>
                     <div class="gradient-colors" id="gradientColors">
-                        ${gradientHtml}
+                        ${gradientHtml || '<div style="opacity:0.5;">Нет цветов градиента</div>'}
                     </div>
                     <button class="add-gradient-btn" onclick="addGradientColor()">+ Добавить цвет</button>
-                    ${gradientColors.length > 1 ? `<button class="add-gradient-btn" onclick="clearGradient()" style="margin-left:5px;">🗑️ Очистить градиент</button>` : ''}
+                    ${gradientColors.length > 0 ? `<button class="add-gradient-btn" onclick="clearGradient()" style="margin-left:5px;">🗑️ Очистить градиент</button>` : ''}
                 </div>
                 
                 <div class="settings-group">
-                    <label>Фоновое изображение:</label>
+                    <label>Фоновое изображение (jpg, png, gif):</label>
                     <input type="file" accept="image/*" onchange="loadBackgroundImage(this)">
                     ${data.settings.bgImage ? `<button onclick="removeBgImage()" style="margin-top:5px;">🗑️ Удалить изображение</button>` : ''}
                 </div>
@@ -2019,7 +1996,6 @@
                 </div>
             `;
             
-            // Обработчик для ползунка
             document.getElementById('musicVolume').addEventListener('input', function() {
                 document.getElementById('volumeDisplay').textContent = this.value + '%';
                 data.settings.musicVolume = parseInt(this.value);
@@ -2030,14 +2006,14 @@
         }
 
         function saveSettings() {
-            data.settings.bgColor = document.getElementById('bgColor').value;
             data.settings.textColor = document.getElementById('textColor').value;
-            const tableColor = document.getElementById('tableColor').value;
-            data.settings.tableColor = tableColor + '99'; // добавляем прозрачность
             
-            // Сохраняем градиент
             const colorInputs = document.querySelectorAll('#gradientColors input[type="color"]');
-            data.settings.gradientColors = Array.from(colorInputs).map(input => input.value);
+            if (colorInputs.length > 0) {
+                data.settings.gradientColors = Array.from(colorInputs).map(input => input.value);
+            } else {
+                data.settings.gradientColors = [];
+            }
             
             data.settings.musicVolume = parseInt(document.getElementById('musicVolume').value);
             data.settings.soundEffects = document.getElementById('soundEffects').checked;
@@ -2045,17 +2021,19 @@
             applySettings();
             saveData();
             closeModal();
+            playClickSound();
+            showNotification('✅ Настройки сохранены!');
         }
 
         function addGradientColor() {
-            if (!data.settings.gradientColors) data.settings.gradientColors = ['#2b2b2b', '#1a1a2e'];
+            if (!data.settings.gradientColors) data.settings.gradientColors = [];
             data.settings.gradientColors.push('#3c3c3c');
             saveData();
             openSettings();
         }
 
         function removeGradientColor(index) {
-            if (data.settings.gradientColors.length > 1) {
+            if (data.settings.gradientColors.length > 0) {
                 data.settings.gradientColors.splice(index, 1);
                 saveData();
                 openSettings();
@@ -2073,7 +2051,7 @@
         }
 
         function clearGradient() {
-            data.settings.gradientColors = [data.settings.bgColor];
+            data.settings.gradientColors = [];
             saveData();
             openSettings();
         }
@@ -2095,6 +2073,8 @@
                     saveData();
                     applySettings();
                     openSettings();
+                    playClickSound();
+                    showNotification('✅ Изображение загружено!');
                 };
                 reader.readAsDataURL(file);
             }
@@ -2105,6 +2085,8 @@
             saveData();
             applySettings();
             openSettings();
+            playClickSound();
+            showNotification('✅ Изображение удалено!');
         }
 
         function resetAll() {
@@ -2119,7 +2101,6 @@
                     settings: {
                         bgColor: '#2b2b2b',
                         textColor: '#ffffff',
-                        tableColor: 'rgba(60, 60, 60, 0.6)',
                         gradientColors: ['#2b2b2b', '#1a1a2e'],
                         bgImage: null,
                         musicVolume: 50,
@@ -2131,10 +2112,11 @@
                 updateAll();
                 updateBalance();
                 closeModal();
+                playClickSound();
+                showNotification('✅ Все сброшено!');
             }
         }
 
-        // ===== ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ =====
         function switchTab(tab) {
             document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
             document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
@@ -2143,6 +2125,7 @@
             document.querySelector(`.tab-btn[data-tab="${tab}"]`).classList.add('active');
             
             if (tab === 'store') renderStore();
+            playClickSound();
         }
 
         function updateAll() {
@@ -2157,14 +2140,6 @@
             document.getElementById('balanceDisplay').textContent = data.balance;
         }
 
-        function scrollTable(containerId, direction) {
-            const container = document.getElementById(containerId);
-            if (container) {
-                const scrollAmount = 80 * direction;
-                container.scrollTop += scrollAmount;
-            }
-        }
-
         function showNotification(message) {
             const notification = document.getElementById('notification');
             notification.textContent = message;
@@ -2177,10 +2152,13 @@
 
         function closeModal() {
             document.getElementById('modal').classList.remove('active');
-            closeContextMenu();
         }
 
-        // ===== ИНИЦИАЛИЗАЦИЯ =====
+        function closeContextMenu() {
+            document.getElementById('contextMenu').classList.remove('active');
+            isContextOpen = false;
+        }
+
         function init() {
             loadData();
             applySettings();
@@ -2189,25 +2167,21 @@
             setupCompletedLongPress();
             setupNotePanelResize();
             
-            // Загружаем музыку с задержкой
             setTimeout(() => {
                 loadMusicFiles();
             }, 500);
             
-            // Закрываем контекстное меню при клике вне
             document.addEventListener('click', function(e) {
                 if (!e.target.closest('.context-menu')) {
                     closeContextMenu();
                 }
             });
             
-            // Закрываем модальное окно по клику вне
             document.getElementById('modal').addEventListener('click', function(e) {
                 if (e.target === this) closeModal();
             });
         }
 
-        // Запуск
         document.addEventListener('DOMContentLoaded', init);
     </script>
 </body>
