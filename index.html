@@ -101,6 +101,10 @@
             background: rgba(255, 255, 255, 0.1);
         }
 
+        .balance.negative {
+            color: #ff6b6b;
+        }
+
         .settings-btn {
             font-size: 24px;
             background: none;
@@ -398,10 +402,7 @@
         }
 
         .store-item .item-name {
-            font-size: 12px;
-            margin-top: 5px;
-            text-align: center;
-            word-break: break-all;
+            display: none;
         }
 
         .store-item .item-cost {
@@ -472,6 +473,13 @@
             border: 1px solid #ffffff;
             border-radius: 5px;
             font-size: 14px;
+        }
+
+        .modal-content input:focus,
+        .modal-content select:focus,
+        .modal-content textarea:focus {
+            outline: 2px solid #ffffff;
+            outline-offset: 2px;
         }
 
         .modal-content .buttons {
@@ -1625,10 +1633,13 @@
         function uncompleteTask(index) {
             if (index >= 0 && index < data.completed.length) {
                 const task = data.completed[index];
-                // Списываем баллы обратно
-                if (task.reward > 0) {
+                // Возвращаем баллы обратно (если награда отрицательная - возвращаем положительные)
+                // Если награда была отрицательной (-N), то при возврате добавляем N баллов обратно
+                const rewardAmount = Math.abs(task.reward);
+                if (task.reward < 0) {
+                    data.balance += rewardAmount;
+                } else {
                     data.balance -= task.reward;
-                    if (data.balance < 0) data.balance = 0;
                 }
                 // Возвращаем задание обратно в список заданий
                 data.tasks.push({
@@ -1784,12 +1795,12 @@
             content.innerHTML = `
                 <h2>✏️ Редактировать задание</h2>
                 <label>Название:</label>
-                <input type="text" id="editTaskName" value="${task.name || ''}">
+                <input type="text" id="editTaskName" value="${task.name || ''}" onkeydown="if(event.key==='Enter') saveEditTask('${type}', ${index})" onfocus="this.select()">
                 <label>Награда:</label>
-                <input type="number" id="editTaskReward" value="${task.reward || 0}">
+                <input type="number" id="editTaskReward" value="${task.reward || 0}" onkeydown="if(event.key==='Enter') saveEditTask('${type}', ${index})" onfocus="this.select()">
                 ${type === 'temp' ? `
                     <label>Дедлайн:</label>
-                    <input type="datetime-local" id="editTaskDeadline" value="${task.deadline || ''}">
+                    <input type="datetime-local" id="editTaskDeadline" value="${task.deadline || ''}" onkeydown="if(event.key==='Enter') saveEditTask('${type}', ${index})" onfocus="this.select()">
                 ` : ''}
                 <div class="buttons">
                     <button class="btn-primary" onclick="saveEditTask('${type}', ${index})">💾 Сохранить</button>
@@ -1798,6 +1809,13 @@
             `;
             
             modal.classList.add('active');
+            setTimeout(() => {
+                const firstInput = content.querySelector('input');
+                if (firstInput) {
+                    firstInput.focus();
+                    firstInput.select();
+                }
+            }, 100);
         }
 
         function saveEditTask(type, index) {
@@ -1945,9 +1963,9 @@
                 content.innerHTML = `
                     <h2>➕ Новое задание</h2>
                     <label>Название:</label>
-                    <input type="text" id="newTaskName" value="Новое задание">
+                    <input type="text" id="newTaskName" value="Новое задание" onkeydown="if(event.key==='Enter') saveNewTask('${type}')" onfocus="this.select()">
                     <label>Награда:</label>
-                    <input type="number" id="newTaskReward" value="0">
+                    <input type="number" id="newTaskReward" value="0" onkeydown="if(event.key==='Enter') saveNewTask('${type}')" onfocus="this.select()">
                     <div class="buttons">
                         <button class="btn-primary" onclick="saveNewTask('${type}')">➕ Создать</button>
                         <button onclick="closeModal()">❌ Отмена</button>
@@ -1955,6 +1973,13 @@
                 `;
                 
                 modal.classList.add('active');
+                setTimeout(() => {
+                    const firstInput = content.querySelector('input');
+                    if (firstInput) {
+                        firstInput.focus();
+                        firstInput.select();
+                    }
+                }, 100);
             }
         }
 
@@ -2007,11 +2032,11 @@
             content.innerHTML = `
                 <h2>${isEdit ? '✏️ Редактировать' : '➕ Новое'} временное задание</h2>
                 <label>Название:</label>
-                <input type="text" id="tempName" value="${task.name || ''}" placeholder="Введите название">
+                <input type="text" id="tempName" value="${task.name || ''}" placeholder="Введите название" onkeydown="if(event.key==='Enter') saveTempTask(${isEdit}, ${editIndex})" onfocus="this.select()">
                 <label>Награда:</label>
-                <input type="number" id="tempReward" value="${task.reward || 0}">
+                <input type="number" id="tempReward" value="${task.reward || 0}" onkeydown="if(event.key==='Enter') saveTempTask(${isEdit}, ${editIndex})" onfocus="this.select()">
                 <label>Дедлайн:</label>
-                <input type="datetime-local" id="tempDeadline" value="${task.deadline || ''}">
+                <input type="datetime-local" id="tempDeadline" value="${task.deadline || ''}" onkeydown="if(event.key==='Enter') saveTempTask(${isEdit}, ${editIndex})" onfocus="this.select()">
                 <div class="buttons">
                     <button class="btn-primary" onclick="saveTempTask(${isEdit}, ${editIndex})">${isEdit ? '💾 Сохранить' : '➕ Создать'}</button>
                     <button onclick="closeModal()">❌ Отмена</button>
@@ -2019,6 +2044,13 @@
             `;
             
             modal.classList.add('active');
+            setTimeout(() => {
+                const firstInput = content.querySelector('input');
+                if (firstInput) {
+                    firstInput.focus();
+                    firstInput.select();
+                }
+            }, 100);
         }
 
         function saveTempTask(isEdit, editIndex) {
@@ -2050,7 +2082,6 @@
                     <div class="store-item" onclick="buyStoreItem(${index})" 
                          oncontextmenu="openContextMenu(event, 'store', ${index}); return false;">
                         <div>${item.icon || '😊'}</div>
-                        <div class="item-name">${item.name || 'Без названия'}</div>
                         <div class="item-cost">${costDisplay}</div>
                         <div style="position:absolute; top:5px; right:10px; font-size:16px; opacity:0.4; cursor:pointer;" onclick="event.stopPropagation(); deleteTask('store', ${index})">✕</div>
                     </div>
@@ -2104,11 +2135,11 @@
             content.innerHTML = `
                 <h2>🏪 Новое задание в магазине</h2>
                 <label>Иконка (смайлик):</label>
-                <input type="text" id="storeIcon" value="😊" maxlength="2">
+                <input type="text" id="storeIcon" value="😊" maxlength="2" onkeydown="if(event.key==='Enter') saveStoreItem()" onfocus="this.select()">
                 <label>Название:</label>
-                <input type="text" id="storeName" value="Новое задание">
+                <input type="text" id="storeName" value="Новое задание" onkeydown="if(event.key==='Enter') saveStoreItem()" onfocus="this.select()">
                 <label>Стоимость (в баллах):</label>
-                <input type="number" id="storeCost" value="10" min="1">
+                <input type="number" id="storeCost" value="10" min="1" onkeydown="if(event.key==='Enter') saveStoreItem()" onfocus="this.select()">
                 <div style="font-size:12px; opacity:0.7; margin-top:5px;">⚠️ Цена всегда будет с минусом (-)</div>
                 <div class="buttons">
                     <button class="btn-primary" onclick="saveStoreItem()">➕ Создать</button>
@@ -2117,6 +2148,13 @@
             `;
             
             modal.classList.add('active');
+            setTimeout(() => {
+                const firstInput = content.querySelector('input');
+                if (firstInput) {
+                    firstInput.focus();
+                    firstInput.select();
+                }
+            }, 100);
         }
 
         function saveStoreItem() {
@@ -2142,11 +2180,11 @@
             content.innerHTML = `
                 <h2>✏️ Редактировать задание в магазине</h2>
                 <label>Иконка (смайлик):</label>
-                <input type="text" id="editStoreIcon" value="${item.icon || '😊'}" maxlength="2">
+                <input type="text" id="editStoreIcon" value="${item.icon || '😊'}" maxlength="2" onkeydown="if(event.key==='Enter') updateStoreItem(${index})" onfocus="this.select()">
                 <label>Название:</label>
-                <input type="text" id="editStoreName" value="${item.name || ''}">
+                <input type="text" id="editStoreName" value="${item.name || ''}" onkeydown="if(event.key==='Enter') updateStoreItem(${index})" onfocus="this.select()">
                 <label>Стоимость (в баллах):</label>
-                <input type="number" id="editStoreCost" value="${item.cost || 1}" min="1">
+                <input type="number" id="editStoreCost" value="${item.cost || 1}" min="1" onkeydown="if(event.key==='Enter') updateStoreItem(${index})" onfocus="this.select()">
                 <div style="font-size:12px; opacity:0.7; margin-top:5px;">⚠️ Цена всегда будет с минусом (-)</div>
                 <div class="buttons">
                     <button class="btn-primary" onclick="updateStoreItem(${index})">💾 Сохранить</button>
@@ -2155,6 +2193,13 @@
             `;
             
             modal.classList.add('active');
+            setTimeout(() => {
+                const firstInput = content.querySelector('input');
+                if (firstInput) {
+                    firstInput.focus();
+                    firstInput.select();
+                }
+            }, 100);
         }
 
         function updateStoreItem(index) {
@@ -2407,7 +2452,7 @@
             content.innerHTML = `
                 <h2>🐷 Положить в копилку</h2>
                 <label>Сколько баллов хотите сберечь?</label>
-                <input type="number" id="piggyAmount" value="${Math.min(10, data.balance)}" min="1" max="${data.balance}">
+                <input type="number" id="piggyAmount" value="${Math.min(10, data.balance)}" min="1" max="${data.balance}" onkeydown="if(event.key==='Enter') saveToPiggy()" onfocus="this.select()">
                 <div style="font-size:12px; opacity:0.7; margin-top:5px;">Доступно: ${data.balance} баллов</div>
                 <div class="buttons">
                     <button class="btn-primary" onclick="saveToPiggy()">💾 Сохранить</button>
@@ -2416,6 +2461,13 @@
             `;
             
             modal.classList.add('active');
+            setTimeout(() => {
+                const input = document.getElementById('piggyAmount');
+                if (input) {
+                    input.focus();
+                    input.select();
+                }
+            }, 100);
         }
 
         function saveToPiggy() {
@@ -2451,7 +2503,7 @@
             content.innerHTML = `
                 <h2>✏️ Забрать из копилки</h2>
                 <label>Сколько баллов хотите забрать?</label>
-                <input type="number" id="piggyWithdrawAmount" value="${Math.min(10, data.piggyBalance)}" min="1" max="${data.piggyBalance}">
+                <input type="number" id="piggyWithdrawAmount" value="${Math.min(10, data.piggyBalance)}" min="1" max="${data.piggyBalance}" onkeydown="if(event.key==='Enter') withdrawFromPiggy()" onfocus="this.select()">
                 <div style="font-size:12px; opacity:0.7; margin-top:5px;">В копилке: ${data.piggyBalance} баллов</div>
                 <div class="buttons">
                     <button class="btn-primary" onclick="withdrawFromPiggy()">💾 Забрать</button>
@@ -2460,6 +2512,13 @@
             `;
             
             modal.classList.add('active');
+            setTimeout(() => {
+                const input = document.getElementById('piggyWithdrawAmount');
+                if (input) {
+                    input.focus();
+                    input.select();
+                }
+            }, 100);
         }
 
         function withdrawFromPiggy() {
@@ -2757,7 +2816,14 @@
         }
 
         function updateBalance() {
-            document.getElementById('balanceDisplay').textContent = data.balance;
+            const balanceEl = document.getElementById('balanceDisplay');
+            balanceEl.textContent = data.balance;
+            const parent = balanceEl.closest('.balance');
+            if (data.balance < 0) {
+                parent.classList.add('negative');
+            } else {
+                parent.classList.remove('negative');
+            }
         }
 
         function showNotification(message) {
@@ -2788,7 +2854,6 @@
             updatePiggyBalance();
             setupNotePanelResize();
             
-            // Закрываем копилку по клику на фон
             document.getElementById('piggyOverlay').addEventListener('click', function(e) {
                 if (e.target === this) closePiggyOverlay();
             });
