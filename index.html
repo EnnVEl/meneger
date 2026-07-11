@@ -301,6 +301,25 @@
             background: rgba(255, 255, 255, 0.1);
         }
 
+        .status-fail-btn {
+            cursor: pointer;
+            font-size: 18px;
+            text-align: center;
+            padding: 3px;
+            display: inline-block;
+            width: 28px;
+            height: 28px;
+            line-height: 28px;
+            text-align: center;
+            border-radius: 4px;
+            transition: background 0.2s;
+            color: #ff6b6b;
+        }
+
+        .status-fail-btn:hover {
+            background: rgba(255, 100, 100, 0.2);
+        }
+
         .empty-row td {
             color: rgba(255, 255, 255, 0.3);
             font-style: italic;
@@ -410,10 +429,6 @@
             transform: scale(1.05);
         }
 
-        .store-item .item-name {
-            display: none;
-        }
-
         .store-item .item-cost {
             font-size: 14px;
             margin-top: 3px;
@@ -517,16 +532,6 @@
 
         .modal-content .buttons .btn-primary:hover {
             opacity: 0.8;
-        }
-
-        .modal-content .buttons .btn-danger {
-            border-color: #ff4444;
-            color: #ff4444 !important;
-        }
-
-        .modal-content .buttons .btn-danger:hover {
-            background: #ff4444;
-            color: #ffffff !important;
         }
 
         .modal-content .buttons button:hover {
@@ -1107,6 +1112,12 @@
                 height: 24px;
                 line-height: 24px;
             }
+            .status-fail-btn {
+                font-size: 16px;
+                width: 24px;
+                height: 24px;
+                line-height: 24px;
+            }
             .music-player button {
                 font-size: 18px;
                 padding: 5px 18px;
@@ -1177,6 +1188,18 @@
             .draggable-row .drag-handle {
                 font-size: 12px;
             }
+            .status-checkbox {
+                font-size: 14px;
+                width: 20px;
+                height: 20px;
+                line-height: 20px;
+            }
+            .status-fail-btn {
+                font-size: 14px;
+                width: 20px;
+                height: 20px;
+                line-height: 20px;
+            }
         }
 
         @media (pointer: coarse) {
@@ -1225,7 +1248,7 @@
                                         <th style="width: 30px;"></th>
                                         <th>Задания</th>
                                         <th style="width: 80px;">Награда</th>
-                                        <th style="width: 50px;">Статус</th>
+                                        <th style="width: 80px;">Статус</th>
                                         <th style="width: 30px;"></th>
                                     </tr>
                                 </thead>
@@ -1287,7 +1310,7 @@
                                         <th style="width: 30px;"></th>
                                         <th>Задания</th>
                                         <th style="width: 80px;">Награда</th>
-                                        <th style="width: 80px;">Статус</th>
+                                        <th style="width: 100px;">Статус</th>
                                         <th style="width: 150px;">Дедлайн</th>
                                         <th style="width: 30px;"></th>
                                     </tr>
@@ -1592,14 +1615,22 @@
                             </td>
                         `;
                     }
+                } else if (type === 'tasks') {
+                    if (task.status === true) {
+                        statusHtml = `<td><span class="status-checkbox" onclick="toggleTask('tasks', ${index})">✅</span></td>`;
+                    } else {
+                        statusHtml = `
+                            <td>
+                                <div class="status-buttons">
+                                    <span class="status-checkbox" onclick="toggleTask('tasks', ${index})">☐</span>
+                                    <span class="status-fail-btn" onclick="failTaskRegular(${index})">✕</span>
+                                </div>
+                            </td>
+                        `;
+                    }
                 } else {
                     const statusSymbol = task.status ? '✅' : '☐';
-                    let clickHandler = '';
-                    if (isCompleted) {
-                        clickHandler = `onclick="uncompleteTask(${index})"`;
-                    } else {
-                        clickHandler = `onclick="toggleTask('${type}', ${index})"`;
-                    }
+                    const clickHandler = isCompleted ? `onclick="uncompleteTask(${index})"` : `onclick="toggleTask('${type}', ${index})"`;
                     statusHtml = `<td><span class="status-checkbox" ${clickHandler}>${statusSymbol}</span></td>`;
                 }
                 
@@ -1608,15 +1639,20 @@
                 const rewardDisplay = task.reward < 0 ? task.reward : `+${task.reward}`;
                 
                 let rowAttrs = `class="${rowClass}" data-index="${index}" data-type="${type}"`;
-                if (!isCompleted) {
+                if (!isCompleted && type !== 'completed') {
                     rowAttrs += ` draggable="true"`;
                 }
                 
                 const deleteBtn = `<td class="delete-btn" onclick="deleteTask('${type}', ${index})">✕</td>`;
                 
-                const dragHandle = !isCompleted ? `<td class="drag-handle" draggable="true">⠿</td>` : `<td style="text-align: center;">${index + 1}</td>`;
+                let dragHandle = '';
+                if (!isCompleted && type !== 'completed') {
+                    dragHandle = `<td class="drag-handle" draggable="true">⠿</td>`;
+                } else {
+                    dragHandle = `<td style="text-align: center;">${index + 1}</td>`;
+                }
                 
-                const nameClick = !isCompleted ? `onclick="editTask('${type}', ${index}, 'name')" oncontextmenu="openContextMenu(event, '${type}', ${index})"` : `onclick="showCompletedDate(${index})"`;
+                const nameClick = (!isCompleted && type !== 'completed') ? `onclick="openEditMenu(event, '${type}', ${index})" oncontextmenu="openEditMenu(event, '${type}', ${index})"` : `onclick="showCompletedDate(${index})"`;
                 
                 const nameCell = `<td class="task-name" ${nameClick}>${task.name || 'Новое задание'}</td>`;
                 
@@ -1624,7 +1660,7 @@
                     <tr ${rowAttrs}>
                         ${dragHandle}
                         ${nameCell}
-                        <td ${isCompleted ? '' : `onclick="editTask('${type}', ${index}, 'reward')"`}>${rewardDisplay}</td>
+                        <td ${isCompleted ? '' : ''}>${rewardDisplay}</td>
                         ${statusHtml}
                         ${deadlineHtml}
                         ${deleteBtn}
@@ -1647,9 +1683,48 @@
             
             tbody.innerHTML = html;
             
-            if (!isCompleted) {
+            if (!isCompleted && type !== 'completed') {
                 setupDragDrop(tbody, type);
-                setupLongPress(tbody, type);
+            }
+        }
+
+        function openEditMenu(event, type, index) {
+            event.preventDefault();
+            event.stopPropagation();
+            const menu = document.getElementById('contextMenu');
+            contextType = type;
+            contextIndex = index;
+            
+            let x = event.clientX || 0;
+            let y = event.clientY || 0;
+            
+            if (x + 180 > window.innerWidth) x = window.innerWidth - 180;
+            if (y + 100 > window.innerHeight) y = window.innerHeight - 100;
+            
+            menu.style.left = Math.max(10, x) + 'px';
+            menu.style.top = Math.max(10, y) + 'px';
+            menu.classList.add('active');
+            isContextOpen = true;
+        }
+
+        function closeContextMenu() {
+            document.getElementById('contextMenu').classList.remove('active');
+            isContextOpen = false;
+        }
+
+        function contextEdit() {
+            const type = contextType;
+            const index = contextIndex;
+            closeContextMenu();
+            
+            if (type && index !== null && index !== undefined) {
+                if (type === 'store') {
+                    editStoreItem(index);
+                } else if (type === 'temp') {
+                    showTempTaskDialog(index);
+                } else if (type === 'tasks') {
+                    showEditTaskDialog('tasks', index);
+                }
             }
         }
 
@@ -1669,6 +1744,17 @@
                 } else {
                     showNotification('📅 Дата выполнения не сохранена');
                 }
+                playClickSound();
+            }
+        }
+
+        function failTaskRegular(index) {
+            if (index >= 0 && index < data.tasks.length) {
+                const task = data.tasks[index];
+                showNotification('😊 Ничего страшного, в следующий раз!');
+                data.tasks.splice(index, 1);
+                saveData();
+                updateAll();
                 playClickSound();
             }
         }
@@ -1713,105 +1799,6 @@
             saveData();
             updateAll();
             playClickSound();
-        }
-
-        let longPressTimer = null;
-        let longPressTarget = null;
-
-        function setupLongPress(tbody, type) {
-            const rows = tbody.querySelectorAll('.draggable-row');
-            rows.forEach(row => {
-                row.addEventListener('mousedown', function(e) {
-                    if (e.target.closest('.delete-btn') || !e.target.closest('.drag-handle')) return;
-                    longPressTarget = { type, index: parseInt(this.dataset.index) };
-                    longPressTimer = setTimeout(() => {
-                        if (longPressTarget && !isContextOpen) {
-                            isContextOpen = true;
-                            openContextMenu(e, longPressTarget.type, longPressTarget.index);
-                            longPressTarget = null;
-                        }
-                    }, 600);
-                });
-                
-                row.addEventListener('mouseup', function() {
-                    clearTimeout(longPressTimer);
-                    if (!isContextOpen) {
-                        longPressTarget = null;
-                    }
-                });
-                
-                row.addEventListener('mouseleave', function() {
-                    clearTimeout(longPressTimer);
-                    if (!isContextOpen) {
-                        longPressTarget = null;
-                    }
-                });
-                
-                row.addEventListener('touchstart', function(e) {
-                    if (e.target.closest('.delete-btn') || !e.target.closest('.drag-handle')) return;
-                    const touch = e.touches[0];
-                    longPressTarget = { type, index: parseInt(this.dataset.index) };
-                    longPressTimer = setTimeout(() => {
-                        if (longPressTarget && !isContextOpen) {
-                            isContextOpen = true;
-                            openContextMenu({ clientX: touch.clientX, clientY: touch.clientY, preventDefault: () => {} }, longPressTarget.type, longPressTarget.index);
-                            longPressTarget = null;
-                        }
-                    }, 600);
-                }, { passive: true });
-                
-                row.addEventListener('touchend', function() {
-                    clearTimeout(longPressTimer);
-                    if (!isContextOpen) {
-                        longPressTarget = null;
-                    }
-                }, { passive: true });
-                
-                row.addEventListener('touchcancel', function() {
-                    clearTimeout(longPressTimer);
-                    longPressTarget = null;
-                }, { passive: true });
-            });
-        }
-
-        function openContextMenu(event, type, index) {
-            event.preventDefault();
-            event.stopPropagation();
-            const menu = document.getElementById('contextMenu');
-            contextType = type;
-            contextIndex = index;
-            
-            let x = event.clientX || 0;
-            let y = event.clientY || 0;
-            
-            if (x + 180 > window.innerWidth) x = window.innerWidth - 180;
-            if (y + 100 > window.innerHeight) y = window.innerHeight - 100;
-            
-            menu.style.left = Math.max(10, x) + 'px';
-            menu.style.top = Math.max(10, y) + 'px';
-            menu.classList.add('active');
-            isContextOpen = true;
-        }
-
-        function closeContextMenu() {
-            document.getElementById('contextMenu').classList.remove('active');
-            isContextOpen = false;
-        }
-
-        function contextEdit() {
-            const type = contextType;
-            const index = contextIndex;
-            closeContextMenu();
-            
-            if (type && index !== null && index !== undefined) {
-                if (type === 'store') {
-                    editStoreItem(index);
-                } else if (type === 'temp') {
-                    showTempTaskDialog(index);
-                } else if (type === 'tasks') {
-                    showEditTaskDialog('tasks', index);
-                }
-            }
         }
 
         let dragData = null;
@@ -1974,29 +1961,6 @@
             showNotification('✅ Задание создано!');
         }
 
-        function editTask(type, index, field) {
-            const taskList = type === 'tasks' ? data.tasks : data.tempTasks;
-            if (!taskList || index >= taskList.length) return;
-            
-            if (field === 'name') {
-                showEditTaskDialog(type, index);
-            } else if (field === 'reward') {
-                const task = taskList[index];
-                const currentValue = String(task.reward);
-                const newValue = prompt(`Введите новое значение награды:`, currentValue);
-                if (newValue !== null) {
-                    const num = parseInt(newValue);
-                    if (!isNaN(num)) {
-                        task.reward = num;
-                        saveData();
-                        updateAll();
-                        playClickSound();
-                        showNotification('✅ Задание обновлено!');
-                    }
-                }
-            }
-        }
-
         function showEditTaskDialog(type, index) {
             const taskList = type === 'tasks' ? data.tasks : data.tempTasks;
             if (!taskList || index >= taskList.length) return;
@@ -2112,7 +2076,7 @@
                 const costDisplay = `-${item.cost || 0}`;
                 html += `
                     <div class="store-item" onclick="buyStoreItem(${index})" 
-                         oncontextmenu="openContextMenu(event, 'store', ${index}); return false;">
+                         oncontextmenu="openEditMenu(event, 'store', ${index}); return false;">
                         <div>${item.icon || '😊'}</div>
                         <div class="item-cost">${costDisplay}</div>
                         <div style="position:absolute; top:5px; right:10px; font-size:16px; opacity:0.4; cursor:pointer;" onclick="event.stopPropagation(); deleteTask('store', ${index})">✕</div>
@@ -2127,37 +2091,6 @@
             `;
             
             grid.innerHTML = html;
-            
-            const items = grid.querySelectorAll('.store-item:not(.add-btn)');
-            items.forEach((item, index) => {
-                let timer = null;
-                const startLongPress = function(e) {
-                    timer = setTimeout(() => {
-                        if (!isContextOpen) {
-                            isContextOpen = true;
-                            openContextMenu(e, 'store', index);
-                        }
-                    }, 600);
-                };
-                const endLongPress = function() {
-                    clearTimeout(timer);
-                };
-                
-                item.addEventListener('mousedown', startLongPress);
-                item.addEventListener('mouseup', endLongPress);
-                item.addEventListener('mouseleave', endLongPress);
-                item.addEventListener('touchstart', function(e) {
-                    const touch = e.touches[0];
-                    timer = setTimeout(() => {
-                        if (!isContextOpen) {
-                            isContextOpen = true;
-                            openContextMenu({ clientX: touch.clientX, clientY: touch.clientY, preventDefault: () => {} }, 'store', index);
-                        }
-                    }, 600);
-                }, { passive: true });
-                item.addEventListener('touchend', endLongPress, { passive: true });
-                item.addEventListener('touchcancel', endLongPress, { passive: true });
-            });
         }
 
         function addStoreItem() {
