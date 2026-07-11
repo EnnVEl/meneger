@@ -257,11 +257,20 @@
             color: var(--text-color, #ffffff);
         }
 
-        .draggable-row {
+        .draggable-row .drag-handle {
             cursor: grab;
+            text-align: center;
+            padding: 0 5px;
+            font-size: 16px;
+            opacity: 0.5;
+            user-select: none;
         }
 
-        .draggable-row:active {
+        .draggable-row .drag-handle:hover {
+            opacity: 1;
+        }
+
+        .draggable-row .drag-handle:active {
             cursor: grabbing;
         }
 
@@ -528,14 +537,14 @@
             margin: 12px 0;
         }
 
-        .color-picker {
+        .color-picker-wrapper {
             display: flex;
             align-items: center;
             gap: 10px;
             flex-wrap: wrap;
         }
 
-        .color-picker input[type="color"] {
+        .color-picker-wrapper input[type="color"] {
             width: 40px;
             height: 40px;
             border: 2px solid #ffffff;
@@ -543,6 +552,23 @@
             cursor: pointer;
             background: none;
             padding: 2px;
+        }
+
+        .color-picker-wrapper input[type="text"] {
+            width: 100px;
+            padding: 6px 10px;
+            background: rgba(255, 255, 255, 0.08);
+            color: #ffffff !important;
+            border: 1px solid #ffffff;
+            border-radius: 5px;
+            font-size: 13px;
+            font-family: monospace;
+            text-transform: uppercase;
+        }
+
+        .color-picker-wrapper input[type="text"]:focus {
+            outline: 2px solid #ffffff;
+            outline-offset: 2px;
         }
 
         .gradient-colors {
@@ -566,6 +592,23 @@
             border: none;
             cursor: pointer;
             padding: 0;
+        }
+
+        .gradient-colors .color-input-wrapper input[type="text"] {
+            width: 60px;
+            padding: 4px 6px;
+            background: rgba(255, 255, 255, 0.08);
+            color: #ffffff !important;
+            border: 1px solid #ffffff;
+            border-radius: 3px;
+            font-size: 11px;
+            font-family: monospace;
+            text-transform: uppercase;
+        }
+
+        .gradient-colors .color-input-wrapper input[type="text"]:focus {
+            outline: 2px solid #ffffff;
+            outline-offset: 2px;
         }
 
         .gradient-colors .color-move-btn {
@@ -734,14 +777,6 @@
 
         .context-menu-item:hover {
             background: rgba(255, 255, 255, 0.1);
-        }
-
-        .context-menu-item.danger {
-            color: #ff4444;
-        }
-
-        .context-menu-item.danger:hover {
-            background: rgba(255, 68, 68, 0.2);
         }
 
         /* ЗАМЕТКИ */
@@ -1093,6 +1128,9 @@
                 font-size: 22px !important;
                 padding: 8px 14px !important;
             }
+            .draggable-row .drag-handle {
+                font-size: 14px;
+            }
         }
 
         @media (max-width: 480px) {
@@ -1136,13 +1174,16 @@
                 padding: 6px 10px !important;
                 min-width: 40px;
             }
+            .draggable-row .drag-handle {
+                font-size: 12px;
+            }
         }
 
         @media (pointer: coarse) {
-            .draggable-row {
+            .draggable-row .drag-handle {
                 cursor: default;
             }
-            .draggable-row:active {
+            .draggable-row .drag-handle:active {
                 cursor: default;
             }
         }
@@ -1181,7 +1222,7 @@
                             <table id="tasksTable">
                                 <thead>
                                     <tr>
-                                        <th style="width: 25px;">#</th>
+                                        <th style="width: 30px;"></th>
                                         <th>Задания</th>
                                         <th style="width: 80px;">Награда</th>
                                         <th style="width: 50px;">Статус</th>
@@ -1210,7 +1251,7 @@
                             <table id="completedTable">
                                 <thead>
                                     <tr>
-                                        <th style="width: 25px;">#</th>
+                                        <th style="width: 30px;">#</th>
                                         <th>Задания</th>
                                         <th style="width: 80px;">Награда</th>
                                         <th style="width: 50px;">Статус</th>
@@ -1243,7 +1284,7 @@
                             <table id="tempTable">
                                 <thead>
                                     <tr>
-                                        <th style="width: 25px;">#</th>
+                                        <th style="width: 30px;"></th>
                                         <th>Задания</th>
                                         <th style="width: 80px;">Награда</th>
                                         <th style="width: 80px;">Статус</th>
@@ -1276,7 +1317,16 @@
         </div>
     </div>
 
-    <!-- Копилка overlay -->
+    <div class="context-menu" id="contextMenu">
+        <div class="context-menu-item" onclick="contextEdit()">✏️ Редактировать</div>
+    </div>
+
+    <div class="modal" id="modal">
+        <div class="modal-content" id="modalContent"></div>
+    </div>
+
+    <div class="notification" id="notification"></div>
+
     <div class="piggy-overlay" id="piggyOverlay">
         <button class="piggy-close" onclick="closePiggyOverlay()">✕</button>
         <div class="piggy-content">
@@ -1288,17 +1338,6 @@
             </div>
         </div>
     </div>
-
-    <div class="context-menu" id="contextMenu">
-        <div class="context-menu-item" onclick="contextEdit()">✏️ Редактировать</div>
-        <div class="context-menu-item danger" onclick="contextDelete()">🗑️ Удалить</div>
-    </div>
-
-    <div class="modal" id="modal">
-        <div class="modal-content" id="modalContent"></div>
-    </div>
-
-    <div class="notification" id="notification"></div>
 
     <script>
         let data = {
@@ -1314,7 +1353,7 @@
                 textColor: '#ffffff',
                 gradientColors: ['#2b2b2b', '#1a1a2e'],
                 bgImage: null,
-                musicVolume: 80,
+                musicVolume: 100,
                 soundEffects: true
             }
         };
@@ -1350,9 +1389,9 @@
                 gainNode.connect(audioContext.destination);
                 oscillator.frequency.value = 800;
                 oscillator.type = 'sine';
-                gainNode.gain.value = 0.12;
+                gainNode.gain.value = 0.2;
                 oscillator.start();
-                oscillator.stop(audioContext.currentTime + 0.05);
+                oscillator.stop(audioContext.currentTime + 0.06);
             } catch (e) {}
         }
 
@@ -1401,7 +1440,8 @@
                     musicAudio = null;
                 }
                 musicAudio = new Audio(musicFiles[index]);
-                musicAudio.volume = Math.min(1, data.settings.musicVolume / 80);
+                const volume = Math.min(1, data.settings.musicVolume / 70);
+                musicAudio.volume = volume;
                 musicAudio.addEventListener('ended', () => {
                     nextSong();
                 });
@@ -1449,7 +1489,8 @@
 
         function updateMusicVolume() {
             if (musicAudio) {
-                musicAudio.volume = Math.min(1, data.settings.musicVolume / 80);
+                const volume = Math.min(1, data.settings.musicVolume / 70);
+                musicAudio.volume = volume;
             }
         }
 
@@ -1474,7 +1515,7 @@
                             textColor: '#ffffff',
                             gradientColors: ['#2b2b2b', '#1a1a2e'],
                             bgImage: null,
-                            musicVolume: 80,
+                            musicVolume: 100,
                             soundEffects: true
                         };
                     }
@@ -1482,7 +1523,7 @@
                         data.settings.gradientColors = ['#2b2b2b', '#1a1a2e'];
                     }
                     if (!data.settings.musicVolume) {
-                        data.settings.musicVolume = 80;
+                        data.settings.musicVolume = 100;
                     }
                     applySettings();
                     updateAll();
@@ -1568,20 +1609,22 @@
                 
                 let rowAttrs = `class="${rowClass}" data-index="${index}" data-type="${type}"`;
                 if (!isCompleted) {
-                    rowAttrs += ` draggable="true" oncontextmenu="openContextMenu(event, '${type}', ${index})"`;
+                    rowAttrs += ` draggable="true"`;
                 }
                 
                 const deleteBtn = `<td class="delete-btn" onclick="deleteTask('${type}', ${index})">✕</td>`;
                 
-                const nameCell = isCompleted ? 
-                    `<td class="task-name" onclick="showCompletedDate(${index})">${task.name || 'Новое задание'}</td>` :
-                    `<td ondblclick="editTask('${type}', ${index}, 'name')">${task.name || 'Новое задание'}</td>`;
+                const dragHandle = !isCompleted ? `<td class="drag-handle" draggable="true">⠿</td>` : `<td style="text-align: center;">${index + 1}</td>`;
+                
+                const nameClick = !isCompleted ? `onclick="editTask('${type}', ${index}, 'name')" oncontextmenu="openContextMenu(event, '${type}', ${index})"` : `onclick="showCompletedDate(${index})"`;
+                
+                const nameCell = `<td class="task-name" ${nameClick}>${task.name || 'Новое задание'}</td>`;
                 
                 html += `
                     <tr ${rowAttrs}>
-                        ${!isCompleted ? `<td style="cursor: grab; text-align: center;">⠿</td>` : `<td style="text-align: center;">${index + 1}</td>`}
+                        ${dragHandle}
                         ${nameCell}
-                        <td ${isCompleted ? '' : `ondblclick="editTask('${type}', ${index}, 'reward')"`}>${rewardDisplay}</td>
+                        <td ${isCompleted ? '' : `onclick="editTask('${type}', ${index}, 'reward')"`}>${rewardDisplay}</td>
                         ${statusHtml}
                         ${deadlineHtml}
                         ${deleteBtn}
@@ -1633,16 +1676,13 @@
         function uncompleteTask(index) {
             if (index >= 0 && index < data.completed.length) {
                 const task = data.completed[index];
-                // Возвращаем баллы обратно (если награда отрицательная - возвращаем положительные)
-                // Если награда была отрицательной (-N), то при возврате добавляем N баллов обратно
                 const rewardAmount = Math.abs(task.reward);
                 if (task.reward < 0) {
                     data.balance += rewardAmount;
                 } else {
                     data.balance -= task.reward;
                 }
-                // Возвращаем задание обратно в список заданий
-                data.tasks.push({
+                data.tasks.unshift({
                     name: task.name,
                     reward: task.reward,
                     status: false
@@ -1682,7 +1722,7 @@
             const rows = tbody.querySelectorAll('.draggable-row');
             rows.forEach(row => {
                 row.addEventListener('mousedown', function(e) {
-                    if (e.target.closest('.delete-btn')) return;
+                    if (e.target.closest('.delete-btn') || !e.target.closest('.drag-handle')) return;
                     longPressTarget = { type, index: parseInt(this.dataset.index) };
                     longPressTimer = setTimeout(() => {
                         if (longPressTarget && !isContextOpen) {
@@ -1708,7 +1748,7 @@
                 });
                 
                 row.addEventListener('touchstart', function(e) {
-                    if (e.target.closest('.delete-btn')) return;
+                    if (e.target.closest('.delete-btn') || !e.target.closest('.drag-handle')) return;
                     const touch = e.touches[0];
                     longPressTarget = { type, index: parseInt(this.dataset.index) };
                     longPressTimer = setTimeout(() => {
@@ -1774,111 +1814,47 @@
             }
         }
 
-        function contextDelete() {
-            const type = contextType;
-            const index = contextIndex;
-            closeContextMenu();
-            
-            if (type && index !== null && index !== undefined) {
-                deleteTask(type, index);
-            }
-        }
-
-        function showEditTaskDialog(type, index) {
-            const taskList = type === 'tasks' ? data.tasks : data.tempTasks;
-            if (!taskList || index >= taskList.length) return;
-            
-            const task = taskList[index];
-            const modal = document.getElementById('modal');
-            const content = document.getElementById('modalContent');
-            
-            content.innerHTML = `
-                <h2>✏️ Редактировать задание</h2>
-                <label>Название:</label>
-                <input type="text" id="editTaskName" value="${task.name || ''}" onkeydown="if(event.key==='Enter') saveEditTask('${type}', ${index})" onfocus="this.select()">
-                <label>Награда:</label>
-                <input type="number" id="editTaskReward" value="${task.reward || 0}" onkeydown="if(event.key==='Enter') saveEditTask('${type}', ${index})" onfocus="this.select()">
-                ${type === 'temp' ? `
-                    <label>Дедлайн:</label>
-                    <input type="datetime-local" id="editTaskDeadline" value="${task.deadline || ''}" onkeydown="if(event.key==='Enter') saveEditTask('${type}', ${index})" onfocus="this.select()">
-                ` : ''}
-                <div class="buttons">
-                    <button class="btn-primary" onclick="saveEditTask('${type}', ${index})">💾 Сохранить</button>
-                    <button onclick="closeModal()">❌ Отмена</button>
-                </div>
-            `;
-            
-            modal.classList.add('active');
-            setTimeout(() => {
-                const firstInput = content.querySelector('input');
-                if (firstInput) {
-                    firstInput.focus();
-                    firstInput.select();
-                }
-            }, 100);
-        }
-
-        function saveEditTask(type, index) {
-            const taskList = type === 'tasks' ? data.tasks : data.tempTasks;
-            if (!taskList || index >= taskList.length) return;
-            
-            const task = taskList[index];
-            const name = document.getElementById('editTaskName').value || 'Без названия';
-            const reward = parseInt(document.getElementById('editTaskReward').value) || 0;
-            
-            task.name = name;
-            task.reward = reward;
-            
-            if (type === 'temp') {
-                const deadline = document.getElementById('editTaskDeadline').value || '';
-                task.deadline = deadline;
-            }
-            
-            saveData();
-            updateAll();
-            closeModal();
-            playClickSound();
-            showNotification('✅ Задание обновлено!');
-        }
-
         let dragData = null;
 
         function setupDragDrop(tbody, type) {
             const rows = tbody.querySelectorAll('.draggable-row');
             
             rows.forEach(row => {
-                row.addEventListener('dragstart', function(e) {
+                const handle = row.querySelector('.drag-handle');
+                if (!handle) return;
+                
+                handle.addEventListener('dragstart', function(e) {
                     if (e.target.closest('.delete-btn')) {
                         e.preventDefault();
                         return;
                     }
-                    dragData = { type, index: parseInt(this.dataset.index) };
-                    this.classList.add('dragging');
+                    dragData = { type, index: parseInt(row.dataset.index) };
+                    row.classList.add('dragging');
                     e.dataTransfer.effectAllowed = 'move';
                 });
                 
-                row.addEventListener('dragend', function() {
-                    this.classList.remove('dragging');
+                handle.addEventListener('dragend', function() {
+                    row.classList.remove('dragging');
                     document.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over'));
                 });
                 
-                row.addEventListener('dragover', function(e) {
+                handle.addEventListener('dragover', function(e) {
                     e.preventDefault();
                     e.dataTransfer.dropEffect = 'move';
                     document.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over'));
-                    this.classList.add('drag-over');
+                    row.classList.add('drag-over');
                 });
                 
-                row.addEventListener('dragleave', function() {
-                    this.classList.remove('drag-over');
+                handle.addEventListener('dragleave', function() {
+                    row.classList.remove('drag-over');
                 });
                 
-                row.addEventListener('drop', function(e) {
+                handle.addEventListener('drop', function(e) {
                     e.preventDefault();
-                    this.classList.remove('drag-over');
+                    row.classList.remove('drag-over');
                     if (!dragData) return;
                     
-                    const targetIndex = parseInt(this.dataset.index);
+                    const targetIndex = parseInt(row.dataset.index);
                     const sourceType = dragData.type;
                     const sourceIndex = dragData.index;
                     
@@ -1988,7 +1964,7 @@
             const reward = parseInt(document.getElementById('newTaskReward').value) || 0;
             
             if (type === 'tasks') {
-                data.tasks.push({ name, reward, status: false });
+                data.tasks.unshift({ name, reward, status: false });
             }
             
             saveData();
@@ -2002,24 +1978,80 @@
             const taskList = type === 'tasks' ? data.tasks : data.tempTasks;
             if (!taskList || index >= taskList.length) return;
             
-            const task = taskList[index];
-            const currentValue = field === 'name' ? task.name : String(task.reward);
-            const newValue = prompt(`Введите новое ${field === 'name' ? 'название' : 'значение награды'}:`, currentValue);
-            
-            if (newValue !== null) {
-                if (field === 'name') {
-                    task.name = newValue || 'Без названия';
-                } else {
+            if (field === 'name') {
+                showEditTaskDialog(type, index);
+            } else if (field === 'reward') {
+                const task = taskList[index];
+                const currentValue = String(task.reward);
+                const newValue = prompt(`Введите новое значение награды:`, currentValue);
+                if (newValue !== null) {
                     const num = parseInt(newValue);
                     if (!isNaN(num)) {
                         task.reward = num;
+                        saveData();
+                        updateAll();
+                        playClickSound();
+                        showNotification('✅ Задание обновлено!');
                     }
                 }
-                saveData();
-                updateAll();
-                playClickSound();
-                showNotification('✅ Задание обновлено!');
             }
+        }
+
+        function showEditTaskDialog(type, index) {
+            const taskList = type === 'tasks' ? data.tasks : data.tempTasks;
+            if (!taskList || index >= taskList.length) return;
+            
+            const task = taskList[index];
+            const modal = document.getElementById('modal');
+            const content = document.getElementById('modalContent');
+            
+            content.innerHTML = `
+                <h2>✏️ Редактировать задание</h2>
+                <label>Название:</label>
+                <input type="text" id="editTaskName" value="${task.name || ''}" onkeydown="if(event.key==='Enter') saveEditTask('${type}', ${index})" onfocus="this.select()">
+                <label>Награда:</label>
+                <input type="number" id="editTaskReward" value="${task.reward || 0}" onkeydown="if(event.key==='Enter') saveEditTask('${type}', ${index})" onfocus="this.select()">
+                ${type === 'temp' ? `
+                    <label>Дедлайн:</label>
+                    <input type="datetime-local" id="editTaskDeadline" value="${task.deadline || ''}" onkeydown="if(event.key==='Enter') saveEditTask('${type}', ${index})" onfocus="this.select()">
+                ` : ''}
+                <div class="buttons">
+                    <button class="btn-primary" onclick="saveEditTask('${type}', ${index})">💾 Сохранить</button>
+                    <button onclick="closeModal()">❌ Отмена</button>
+                </div>
+            `;
+            
+            modal.classList.add('active');
+            setTimeout(() => {
+                const firstInput = content.querySelector('input');
+                if (firstInput) {
+                    firstInput.focus();
+                    firstInput.select();
+                }
+            }, 100);
+        }
+
+        function saveEditTask(type, index) {
+            const taskList = type === 'tasks' ? data.tasks : data.tempTasks;
+            if (!taskList || index >= taskList.length) return;
+            
+            const task = taskList[index];
+            const name = document.getElementById('editTaskName').value || 'Без названия';
+            const reward = parseInt(document.getElementById('editTaskReward').value) || 0;
+            
+            task.name = name;
+            task.reward = reward;
+            
+            if (type === 'temp') {
+                const deadline = document.getElementById('editTaskDeadline').value || '';
+                task.deadline = deadline;
+            }
+            
+            saveData();
+            updateAll();
+            closeModal();
+            playClickSound();
+            showNotification('✅ Задание обновлено!');
         }
 
         function showTempTaskDialog(editIndex) {
@@ -2061,7 +2093,7 @@
             if (isEdit && editIndex !== null && editIndex !== undefined) {
                 data.tempTasks[editIndex] = { name, reward, status: false, deadline };
             } else {
-                data.tempTasks.push({ name, reward, status: false, deadline });
+                data.tempTasks.unshift({ name, reward, status: false, deadline });
             }
             
             saveData();
@@ -2221,7 +2253,7 @@
             if (index >= data.store.length) return;
             const item = data.store[index];
             
-            data.tasks.push({
+            data.tasks.unshift({
                 name: item.name,
                 reward: -item.cost,
                 status: false
@@ -2586,7 +2618,8 @@
             if (gradientColors.length > 0) {
                 gradientHtml = gradientColors.map((color, i) => `
                     <div class="color-input-wrapper">
-                        <input type="color" value="${color}" onchange="updateGradientColor(${i}, this.value)">
+                        <input type="color" value="${color}" onchange="updateGradientColor(${i}, this.value)" id="gradientColor_${i}">
+                        <input type="text" value="${color}" onchange="updateGradientColorFromText(${i}, this.value)" onfocus="this.select()" placeholder="#000000">
                         <button class="color-move-btn" onclick="moveGradientColor(${i}, -1)" ${i === 0 ? 'disabled' : ''}>⬆</button>
                         <button class="color-move-btn" onclick="moveGradientColor(${i}, 1)" ${i === gradientColors.length - 1 ? 'disabled' : ''}>⬇</button>
                         <button class="remove-gradient-btn" onclick="removeGradientColor(${i})">✕</button>
@@ -2599,15 +2632,17 @@
                 
                 <div class="settings-group">
                     <label>Цвет фона:</label>
-                    <div class="color-picker">
-                        <input type="color" id="bgColor" value="${data.settings.bgColor}">
+                    <div class="color-picker-wrapper">
+                        <input type="color" id="bgColor" value="${data.settings.bgColor}" onchange="updateBgColorFromPicker(this.value)">
+                        <input type="text" id="bgColorText" value="${data.settings.bgColor}" onchange="updateBgColorFromText(this.value)" onfocus="this.select()" placeholder="#000000">
                     </div>
                 </div>
                 
                 <div class="settings-group">
                     <label>Цвет текста:</label>
-                    <div class="color-picker">
-                        <input type="color" id="textColor" value="${data.settings.textColor}">
+                    <div class="color-picker-wrapper">
+                        <input type="color" id="textColor" value="${data.settings.textColor}" onchange="updateTextColorFromPicker(this.value)">
+                        <input type="text" id="textColorText" value="${data.settings.textColor}" onchange="updateTextColorFromText(this.value)" onfocus="this.select()" placeholder="#000000">
                     </div>
                 </div>
                 
@@ -2654,6 +2689,45 @@
             });
             
             modal.classList.add('active');
+        }
+
+        function updateBgColorFromPicker(value) {
+            document.getElementById('bgColorText').value = value;
+            data.settings.bgColor = value;
+            applySettings();
+        }
+
+        function updateBgColorFromText(value) {
+            if (/^#[0-9a-f]{6}$/i.test(value) || /^#[0-9a-f]{3}$/i.test(value)) {
+                document.getElementById('bgColor').value = value;
+                data.settings.bgColor = value;
+                applySettings();
+            }
+        }
+
+        function updateTextColorFromPicker(value) {
+            document.getElementById('textColorText').value = value;
+            data.settings.textColor = value;
+            applySettings();
+        }
+
+        function updateTextColorFromText(value) {
+            if (/^#[0-9a-f]{6}$/i.test(value) || /^#[0-9a-f]{3}$/i.test(value)) {
+                document.getElementById('textColor').value = value;
+                data.settings.textColor = value;
+                applySettings();
+            }
+        }
+
+        function updateGradientColorFromText(index, value) {
+            if (/^#[0-9a-f]{6}$/i.test(value) || /^#[0-9a-f]{3}$/i.test(value)) {
+                const input = document.getElementById('gradientColor_' + index);
+                if (input) {
+                    input.value = value;
+                    data.settings.gradientColors[index] = value;
+                    applySettings();
+                }
+            }
         }
 
         function saveSettings() {
@@ -2711,7 +2785,8 @@
         function updateGradientColor(index, color) {
             if (data.settings.gradientColors && index < data.settings.gradientColors.length) {
                 data.settings.gradientColors[index] = color;
-                saveData();
+                const textInput = document.querySelectorAll('#gradientColors .color-input-wrapper input[type="text"]')[index];
+                if (textInput) textInput.value = color;
                 applySettings();
             }
         }
@@ -2756,7 +2831,7 @@
                         textColor: '#ffffff',
                         gradientColors: ['#2b2b2b', '#1a1a2e'],
                         bgImage: null,
-                        musicVolume: 80,
+                        musicVolume: 100,
                         soundEffects: true
                     }
                 };
