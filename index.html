@@ -726,6 +726,11 @@
             display: block;
         }
 
+        .notification.warning {
+            border-color: #ff6b6b;
+            color: #ff6b6b;
+        }
+
         @keyframes slideDown {
             from {
                 transform: translateX(-50%) translateY(-100px);
@@ -1945,11 +1950,20 @@
             task.status = true;
             task.completedDate = new Date().toISOString();
             
+            // Сохраняем старый баланс для проверки
+            const oldBalance = data.balance;
+            
             // Разрешаем уходить в минус для заданий с отрицательной наградой
             if (task.reward < 0) {
                 data.balance += task.reward; // task.reward уже отрицательный
                 const spentAmount = Math.abs(task.reward);
-                showNotification(`🎉 Вы потратили ${spentAmount} баллов на "${task.name}"! Молодцы что накопили на него!`);
+                
+                // Проверяем, ушел ли баланс в минус
+                if (data.balance < 0 && oldBalance >= 0) {
+                    showNotification('⚠️ Вы ушли в минус... Ничего страшного, но не залезайте глубоко в долги!', true);
+                } else {
+                    showNotification(`🎉 Вы потратили ${spentAmount} баллов на "${task.name}"! Молодцы что накопили на него!`);
+                }
             } else {
                 data.balance += task.reward;
                 const rewardText = task.reward >= 0 ? `+${task.reward}` : `${task.reward}`;
@@ -2974,14 +2988,19 @@
             }
         }
 
-        function showNotification(message) {
+        function showNotification(message, isWarning = false) {
             const notification = document.getElementById('notification');
             notification.textContent = message;
+            notification.classList.remove('warning');
+            if (isWarning) {
+                notification.classList.add('warning');
+            }
             notification.classList.add('show');
             clearTimeout(notification.timeout);
             notification.timeout = setTimeout(() => {
                 notification.classList.remove('show');
-            }, 3000);
+                notification.classList.remove('warning');
+            }, 4000);
         }
 
         function closeModal() {
