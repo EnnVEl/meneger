@@ -731,6 +731,11 @@
             color: #ff6b6b;
         }
 
+        .notification.success {
+            border-color: #51cf66;
+            color: #51cf66;
+        }
+
         @keyframes slideDown {
             from {
                 transform: translateX(-50%) translateY(-100px);
@@ -1952,6 +1957,7 @@
             
             // Сохраняем старый баланс для проверки
             const oldBalance = data.balance;
+            const wasInDebt = oldBalance < 0;
             
             // Разрешаем уходить в минус для заданий с отрицательной наградой
             if (task.reward < 0) {
@@ -1960,14 +1966,24 @@
                 
                 // Проверяем, ушел ли баланс в минус
                 if (data.balance < 0 && oldBalance >= 0) {
-                    showNotification('⚠️ Вы ушли в минус... Ничего страшного, но не залезайте глубоко в долги!', true);
+                    showNotification('⚠️ Вы ушли в минус... Ничего страшного, но не залезайте глубоко в долги!', 'warning');
+                } else if (data.balance >= 0 && wasInDebt) {
+                    // Вышли из минуса!
+                    showNotification(`🎉 Молодец! Ты выполнил задание "${task.name}" и вылез из долгов! Вот твои баллы! +${Math.abs(spentAmount)}`, 'success');
                 } else {
                     showNotification(`🎉 Вы потратили ${spentAmount} баллов на "${task.name}"! Молодцы что накопили на него!`);
                 }
             } else {
-                data.balance += task.reward;
-                const rewardText = task.reward >= 0 ? `+${task.reward}` : `${task.reward}`;
-                showNotification(`🎉 Молодец! Вот твоя награда: ${rewardText} баллов!`);
+                const rewardAmount = task.reward;
+                data.balance += rewardAmount;
+                
+                // Проверяем, вышли ли из минуса
+                if (data.balance >= 0 && wasInDebt) {
+                    showNotification(`🎉 Молодец! Ты выполнил задание "${task.name}" и вылез из долгов! Вот твои баллы! +${rewardAmount}`, 'success');
+                } else {
+                    const rewardText = rewardAmount >= 0 ? `+${rewardAmount}` : `${rewardAmount}`;
+                    showNotification(`🎉 Молодец! Вот твоя награда: ${rewardText} баллов!`);
+                }
             }
             
             data.completed.push({...task, status: true});
@@ -2988,18 +3004,17 @@
             }
         }
 
-        function showNotification(message, isWarning = false) {
+        function showNotification(message, type = '') {
             const notification = document.getElementById('notification');
             notification.textContent = message;
-            notification.classList.remove('warning');
-            if (isWarning) {
-                notification.classList.add('warning');
+            notification.className = 'notification';
+            if (type) {
+                notification.classList.add(type);
             }
             notification.classList.add('show');
             clearTimeout(notification.timeout);
             notification.timeout = setTimeout(() => {
                 notification.classList.remove('show');
-                notification.classList.remove('warning');
             }, 4000);
         }
 
