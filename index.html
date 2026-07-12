@@ -792,7 +792,15 @@
             background: rgba(0, 0, 0, 0.15);
             border-radius: 8px;
             border: 1px solid rgba(255, 255, 255, 0.05);
-            overflow: hidden;
+            overflow-y: auto;
+            overflow-x: hidden;
+            padding: 10px;
+        }
+
+        .notes-container-inner {
+            position: relative;
+            min-height: 100%;
+            width: 100%;
         }
 
         .note-item-free {
@@ -832,6 +840,7 @@
             min-height: 35px;
             outline: none;
             padding: 5px;
+            padding-right: 25px;
         }
 
         .note-item-free .note-delete {
@@ -849,6 +858,24 @@
         }
 
         .note-item-free .note-delete:hover {
+            opacity: 1;
+        }
+
+        .note-item-free .note-color-btn {
+            position: absolute;
+            top: 2px;
+            left: 5px;
+            background: none;
+            border: none;
+            color: var(--text-color, #ffffff);
+            cursor: pointer;
+            font-size: 14px;
+            opacity: 0.5;
+            padding: 2px 5px;
+            z-index: 25;
+        }
+
+        .note-item-free .note-color-btn:hover {
             opacity: 1;
         }
 
@@ -1075,6 +1102,20 @@
             padding: 8px 14px !important;
         }
 
+        .is-mobile .notes-container {
+            min-height: 400px;
+        }
+
+        .is-mobile .note-item-free {
+            min-width: 80px;
+            min-height: 40px;
+        }
+
+        .is-mobile .note-item-free textarea {
+            font-size: 12px;
+            min-height: 30px;
+        }
+
         /* Адаптивность */
         @media (max-width: 768px) {
             .store-grid {
@@ -1142,6 +1183,9 @@
             .draggable-row .drag-handle {
                 font-size: 14px;
             }
+            .notes-container {
+                min-height: 300px;
+            }
         }
 
         @media (max-width: 480px) {
@@ -1199,6 +1243,17 @@
                 width: 20px;
                 height: 20px;
                 line-height: 20px;
+            }
+            .notes-container {
+                min-height: 250px;
+            }
+            .note-item-free {
+                min-width: 60px;
+                min-height: 35px;
+            }
+            .note-item-free textarea {
+                font-size: 11px;
+                min-height: 25px;
             }
         }
 
@@ -1262,7 +1317,9 @@
                             <h3>📝 Заметки</h3>
                             <button class="add-note-btn" onclick="addNote()">+</button>
                         </div>
-                        <div class="notes-container" id="notesContainer"></div>
+                        <div class="notes-container" id="notesContainer">
+                            <div class="notes-container-inner" id="notesContainerInner"></div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -1291,7 +1348,9 @@
                             <h3>📝 Заметки</h3>
                             <button class="add-note-btn" onclick="addNote()">+</button>
                         </div>
-                        <div class="notes-container" id="notesContainer2"></div>
+                        <div class="notes-container" id="notesContainer2">
+                            <div class="notes-container-inner" id="notesContainerInner2"></div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -1325,7 +1384,9 @@
                             <h3>📝 Заметки</h3>
                             <button class="add-note-btn" onclick="addNote()">+</button>
                         </div>
-                        <div class="notes-container" id="notesContainer3"></div>
+                        <div class="notes-container" id="notesContainer3">
+                            <div class="notes-container-inner" id="notesContainerInner3"></div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -1335,7 +1396,9 @@
                     <h3>📝 Заметки</h3>
                     <button class="add-note-btn" onclick="addNote()">+</button>
                 </div>
-                <div class="notes-container" id="notesContainerMobile"></div>
+                <div class="notes-container" id="notesContainerMobile">
+                    <div class="notes-container-inner" id="notesContainerMobileInner"></div>
+                </div>
             </div>
         </div>
     </div>
@@ -1412,7 +1475,7 @@
                 gainNode.connect(audioContext.destination);
                 oscillator.frequency.value = 800;
                 oscillator.type = 'sine';
-                gainNode.gain.value = 0.2;
+                gainNode.gain.value = 0.3;
                 oscillator.start();
                 oscillator.stop(audioContext.currentTime + 0.06);
             } catch (e) {}
@@ -1463,7 +1526,7 @@
                     musicAudio = null;
                 }
                 musicAudio = new Audio(musicFiles[index]);
-                const volume = Math.min(1, data.settings.musicVolume / 70);
+                const volume = Math.min(1, data.settings.musicVolume / 60);
                 musicAudio.volume = volume;
                 musicAudio.addEventListener('ended', () => {
                     nextSong();
@@ -1512,7 +1575,7 @@
 
         function updateMusicVolume() {
             if (musicAudio) {
-                const volume = Math.min(1, data.settings.musicVolume / 70);
+                const volume = Math.min(1, data.settings.musicVolume / 60);
                 musicAudio.volume = volume;
             }
         }
@@ -2199,37 +2262,48 @@
         }
 
         // ===== ЗАМЕТКИ =====
-        let noteDragData = null;
-
         function renderNotes() {
             const containers = document.querySelectorAll('.notes-container');
             containers.forEach(container => {
-                container.innerHTML = '';
-                const sortedNotes = data.notes.map((note, i) => ({...note, index: i}));
-                sortedNotes.forEach((note, idx) => {
+                const inner = container.querySelector('.notes-container-inner');
+                if (!inner) return;
+                
+                // Обновляем размер внутреннего контейнера чтобы вместить все заметки
+                const maxBottom = Math.max(0, ...data.notes.map(n => (n.y || 0) + (n.height || 120)));
+                const maxRight = Math.max(0, ...data.notes.map(n => (n.x || 0) + (n.width || 180)));
+                inner.style.height = Math.max(container.clientHeight, maxBottom + 50) + 'px';
+                inner.style.width = Math.max(container.clientWidth, maxRight + 50) + 'px';
+                
+                inner.innerHTML = '';
+                data.notes.forEach((note, index) => {
                     const div = document.createElement('div');
                     div.className = 'note-item-free';
-                    div.dataset.index = note.index;
-                    div.style.left = (note.x || 10 + idx * 15) + 'px';
-                    div.style.top = (note.y || 10 + idx * 20) + 'px';
+                    div.dataset.index = index;
+                    div.style.left = (note.x || 10 + index * 15) + 'px';
+                    div.style.top = (note.y || 10 + index * 20) + 'px';
                     div.style.width = (note.width || 180) + 'px';
                     div.style.height = (note.height || 120) + 'px';
-                    div.style.zIndex = note.zIndex || 5 + idx;
+                    div.style.zIndex = note.zIndex || 5 + index;
+                    
+                    const noteColor = note.color || 'rgba(255,255,255,0.12)';
+                    div.style.background = noteColor;
+                    
                     div.innerHTML = `
-                        <button class="note-delete" onclick="deleteNote(${note.index})">✕</button>
-                        <textarea oninput="updateNoteText(${note.index}, this.value)" 
+                        <button class="note-delete" onclick="deleteNote(${index})">✕</button>
+                        <button class="note-color-btn" onclick="changeNoteColor(${index})">✎</button>
+                        <textarea oninput="updateNoteText(${index}, this.value)" 
                                   style="min-height: ${(note.height || 120) - 20}px;">${note.text || ''}</textarea>
-                        <div class="note-resize-handle" onmousedown="startNoteResize(event, ${note.index})"></div>
+                        <div class="note-resize-handle" onmousedown="startNoteResize(event, ${index})"></div>
                     `;
                     
                     let isDragging = false;
                     let startX, startY, origX, origY;
                     
                     const startDrag = function(e) {
-                        if (e.target.closest('.note-delete') || e.target.closest('.note-resize-handle') || e.target.tagName === 'TEXTAREA') return;
+                        if (e.target.closest('.note-delete') || e.target.closest('.note-color-btn') || e.target.closest('.note-resize-handle') || e.target.tagName === 'TEXTAREA') return;
                         
                         const maxZ = Math.max(20, ...data.notes.map(n => n.zIndex || 5));
-                        data.notes[note.index].zIndex = maxZ + 1;
+                        data.notes[index].zIndex = maxZ + 1;
                         div.style.zIndex = maxZ + 1;
                         
                         isDragging = true;
@@ -2250,14 +2324,19 @@
                         const dx = clientX - startX;
                         const dy = clientY - startY;
                         const containerRect = container.getBoundingClientRect();
-                        const newX = Math.max(0, Math.min(containerRect.width - parseInt(div.style.width) || 180, origX + dx));
-                        const newY = Math.max(0, Math.min(containerRect.height - parseInt(div.style.height) || 120, origY + dy));
+                        const newX = Math.max(0, Math.min(inner.clientWidth - parseInt(div.style.width) || 180, origX + dx));
+                        const newY = Math.max(0, Math.min(inner.clientHeight - parseInt(div.style.height) || 120, origY + dy));
                         div.style.left = newX + 'px';
                         div.style.top = newY + 'px';
-                        if (note.index < data.notes.length) {
-                            data.notes[note.index].x = newX;
-                            data.notes[note.index].y = newY;
+                        if (index < data.notes.length) {
+                            data.notes[index].x = newX;
+                            data.notes[index].y = newY;
                         }
+                        // Обновляем размер внутреннего контейнера
+                        const maxBottom2 = Math.max(0, ...data.notes.map(n => (n.y || 0) + (n.height || 120)));
+                        const maxRight2 = Math.max(0, ...data.notes.map(n => (n.x || 0) + (n.width || 180)));
+                        inner.style.height = Math.max(container.clientHeight, maxBottom2 + 50) + 'px';
+                        inner.style.width = Math.max(container.clientWidth, maxRight2 + 50) + 'px';
                     };
                     
                     const endDrag = function() {
@@ -2276,9 +2355,60 @@
                     document.addEventListener('touchmove', moveDrag, { passive: true });
                     document.addEventListener('touchend', endDrag, { passive: true });
                     
-                    container.appendChild(div);
+                    inner.appendChild(div);
                 });
             });
+        }
+
+        function changeNoteColor(index) {
+            if (index >= data.notes.length) return;
+            
+            const modal = document.getElementById('modal');
+            const content = document.getElementById('modalContent');
+            
+            const currentColor = data.notes[index].color || 'rgba(255,255,255,0.12)';
+            // Конвертируем rgba в hex если нужно
+            let hexColor = '#3c3c3c';
+            if (currentColor.startsWith('#')) {
+                hexColor = currentColor;
+            }
+            
+            content.innerHTML = `
+                <h2>🎨 Цвет заметки</h2>
+                <label>Выберите цвет:</label>
+                <div class="color-picker-wrapper">
+                    <input type="color" id="noteColorPicker" value="${hexColor}" onchange="document.getElementById('noteColorText').value = this.value">
+                    <input type="text" id="noteColorText" value="${hexColor}" onchange="document.getElementById('noteColorPicker').value = this.value" onfocus="this.select()" placeholder="#000000">
+                </div>
+                <div style="font-size:12px; opacity:0.7; margin-top:5px;">Цвет будет полупрозрачным</div>
+                <div class="buttons">
+                    <button class="btn-primary" onclick="saveNoteColor(${index})">💾 Сохранить</button>
+                    <button onclick="closeModal()">❌ Отмена</button>
+                </div>
+            `;
+            
+            modal.classList.add('active');
+            setTimeout(() => {
+                const input = document.getElementById('noteColorPicker');
+                if (input) input.focus();
+            }, 100);
+        }
+
+        function saveNoteColor(index) {
+            const color = document.getElementById('noteColorPicker').value;
+            // Добавляем прозрачность
+            const r = parseInt(color.slice(1,3), 16);
+            const g = parseInt(color.slice(3,5), 16);
+            const b = parseInt(color.slice(5,7), 16);
+            const rgbaColor = `rgba(${r}, ${g}, ${b}, 0.25)`;
+            
+            data.notes[index].color = rgbaColor;
+            data.notes[index].hexColor = color;
+            saveData();
+            renderNotes();
+            closeModal();
+            playClickSound();
+            showNotification('✅ Цвет заметки обновлен!');
         }
 
         function addNote() {
@@ -2291,7 +2421,9 @@
                 y: maxY + 20, 
                 width: 180, 
                 height: 120,
-                zIndex: maxZ + 1
+                zIndex: maxZ + 1,
+                color: 'rgba(255,255,255,0.12)',
+                hexColor: '#3c3c3c'
             });
             saveData();
             renderNotes();
@@ -2317,6 +2449,8 @@
             event.preventDefault();
             event.stopPropagation();
             const note = event.target.closest('.note-item-free');
+            const container = note.closest('.notes-container');
+            const inner = container.querySelector('.notes-container-inner');
             const startX = event.clientX || event.touches?.[0]?.clientX || 0;
             const startY = event.clientY || event.touches?.[0]?.clientY || 0;
             const startWidth = parseInt(note.style.width) || 180;
@@ -2333,6 +2467,11 @@
                     data.notes[index].width = newWidth;
                     data.notes[index].height = newHeight;
                 }
+                // Обновляем размер внутреннего контейнера
+                const maxBottom = Math.max(0, ...data.notes.map(n => (n.y || 0) + (n.height || 120)));
+                const maxRight = Math.max(0, ...data.notes.map(n => (n.x || 0) + (n.width || 180)));
+                inner.style.height = Math.max(container.clientHeight, maxBottom + 50) + 'px';
+                inner.style.width = Math.max(container.clientWidth, maxRight + 50) + 'px';
             }
             
             function onUp() {
@@ -2798,19 +2937,10 @@
             if (tab === 'notes') {
                 const mobileContainer = document.getElementById('notesContainerMobile');
                 if (mobileContainer) {
-                    renderNotesMobile();
+                    renderNotes();
                 }
             }
             playClickSound();
-        }
-
-        function renderNotesMobile() {
-            const container = document.getElementById('notesContainerMobile');
-            if (!container) return;
-            const mainContainer = document.getElementById('notesContainer');
-            if (mainContainer) {
-                container.innerHTML = mainContainer.innerHTML;
-            }
         }
 
         function updateAll() {
@@ -2819,7 +2949,6 @@
             renderTemp();
             renderStore();
             renderNotes();
-            renderNotesMobile();
             updatePiggyBalance();
         }
 
@@ -2880,12 +3009,14 @@
                 if (e.target === this) closeModal();
             });
             
+            // Обновление размера контейнера заметок при изменении размера окна
             window.addEventListener('resize', function() {
                 const wasMobile = isMobile;
                 checkMobile();
                 if (wasMobile !== isMobile) {
                     updateAll();
                 }
+                renderNotes();
             });
         }
 
