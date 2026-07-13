@@ -874,6 +874,11 @@
             outline: none;
             padding: 5px;
             padding-right: 25px;
+            pointer-events: none;
+        }
+
+        .note-item-free textarea:focus {
+            pointer-events: auto;
         }
 
         .note-item-free .note-delete {
@@ -916,14 +921,27 @@
             position: absolute;
             bottom: 0;
             right: 0;
-            width: 15px;
-            height: 15px;
+            width: 20px;
+            height: 20px;
             cursor: nw-resize;
-            opacity: 0.3;
+            opacity: 0.5;
             z-index: 25;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            color: var(--text-color, #ffffff);
+            user-select: none;
+            touch-action: none;
         }
 
-        .note-item-free .note-resize-handle:hover {
+        .note-item-free .note-resize-handle::after {
+            content: '↘';
+            opacity: 0.5;
+            font-size: 14px;
+        }
+
+        .note-item-free .note-resize-handle:hover::after {
             opacity: 1;
         }
 
@@ -1149,6 +1167,15 @@
             min-height: 30px;
         }
 
+        .is-mobile .note-item-free .note-resize-handle {
+            width: 30px;
+            height: 30px;
+        }
+
+        .is-mobile .note-item-free .note-resize-handle::after {
+            font-size: 18px;
+        }
+
         /* Адаптивность */
         @media (max-width: 768px) {
             .store-grid {
@@ -1288,6 +1315,13 @@
                 font-size: 11px;
                 min-height: 25px;
             }
+            .note-item-free .note-resize-handle {
+                width: 25px;
+                height: 25px;
+            }
+            .note-item-free .note-resize-handle::after {
+                font-size: 14px;
+            }
         }
 
         @media (pointer: coarse) {
@@ -1295,6 +1329,9 @@
                 cursor: default;
             }
             .draggable-row .drag-handle:active {
+                cursor: default;
+            }
+            .note-item-free .note-resize-handle {
                 cursor: default;
             }
         }
@@ -1803,7 +1840,6 @@
         function returnTaskFromCompleted(index) {
             if (index >= 0 && index < data.completed.length) {
                 const task = data.completed[index];
-                // Возвращаем задание в список заданий как невыполненное
                 data.tasks.unshift({
                     name: task.name,
                     reward: task.reward,
@@ -1883,7 +1919,6 @@
         function failTaskRegular(index) {
             if (index >= 0 && index < data.tasks.length) {
                 const task = data.tasks[index];
-                // Добавляем в завершённые как невыполненное
                 data.completed.push({
                     name: task.name,
                     reward: task.reward,
@@ -1901,7 +1936,6 @@
         function failTask(index) {
             if (index >= 0 && index < data.tempTasks.length) {
                 const task = data.tempTasks[index];
-                // Добавляем в завершённые как невыполненное
                 data.completed.push({
                     name: task.name,
                     reward: task.reward,
@@ -1921,7 +1955,6 @@
             if (index >= 0 && index < data.completed.length) {
                 const task = data.completed[index];
                 if (task.status === true) {
-                    // Выполненное задание - возвращаем
                     const rewardAmount = Math.abs(task.reward);
                     if (task.reward < 0) {
                         data.balance += rewardAmount;
@@ -2032,7 +2065,6 @@
                 const deadline = new Date(task.deadline);
                 if (now > deadline) {
                     showNotification('⏰ Время вышло! Ничего страшного, в следующий раз!');
-                    // Добавляем в завершённые как невыполненное
                     data.completed.push({
                         name: task.name,
                         reward: task.reward,
@@ -2050,24 +2082,18 @@
             task.status = true;
             task.completedDate = new Date().toISOString();
             
-            // Сохраняем старый баланс для проверки
             const oldBalance = data.balance;
             const wasInDebt = oldBalance < 0;
             
-            // Разрешаем уходить в минус для заданий с отрицательной наградой
             if (task.reward < 0) {
-                data.balance += task.reward; // task.reward уже отрицательный
+                data.balance += task.reward;
                 const spentAmount = Math.abs(task.reward);
                 
-                // Проверяем различные сценарии
                 if (data.balance < 0 && oldBalance < 0) {
-                    // Уже были в минусе и ушли ещё глубже
                     showNotification(`⚠️ Вы закапываетесь ещё больше в долги... Постарайтесь вылезти из них! -${spentAmount}`, 'danger');
                 } else if (data.balance < 0 && oldBalance >= 0) {
-                    // Только что ушли в минус
                     showNotification('⚠️ Вы ушли в минус... Ничего страшного, но не залезайте глубоко в долги!', 'warning');
                 } else if (data.balance >= 0 && wasInDebt) {
-                    // Вышли из минуса!
                     showNotification(`🎉 Молодец! Ты выполнил задание "${task.name}" и вылез из долгов! Вот твои баллы! +${spentAmount}`, 'success');
                 } else {
                     showNotification(`🎉 Вы потратили ${spentAmount} баллов на "${task.name}"! Молодцы что накопили на него!`);
@@ -2076,7 +2102,6 @@
                 const rewardAmount = task.reward;
                 data.balance += rewardAmount;
                 
-                // Проверяем, вышли ли из минуса
                 if (data.balance >= 0 && wasInDebt) {
                     showNotification(`🎉 Молодец! Ты выполнил задание "${task.name}" и вылез из долгов! Вот твои баллы! +${rewardAmount}`, 'success');
                 } else {
@@ -2410,6 +2435,7 @@
                         <div class="note-resize-handle" onmousedown="startNoteResize(event, ${index})"></div>
                     `;
                     
+                    // Перетаскивание заметок
                     let isDragging = false;
                     let startX, startY, origX, origY;
                     
@@ -2467,6 +2493,75 @@
                     div.addEventListener('touchstart', startDrag, { passive: true });
                     document.addEventListener('touchmove', moveDrag, { passive: true });
                     document.addEventListener('touchend', endDrag, { passive: true });
+                    
+                    // Изменение размера заметки через правый нижний угол
+                    const resizeHandle = div.querySelector('.note-resize-handle');
+                    if (resizeHandle) {
+                        let isResizing = false;
+                        let startResizeX, startResizeY, startWidth, startHeight;
+                        
+                        const startResize = function(e) {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            isResizing = true;
+                            const clientX = e.clientX || e.touches?.[0]?.clientX || 0;
+                            const clientY = e.clientY || e.touches?.[0]?.clientY || 0;
+                            startResizeX = clientX;
+                            startResizeY = clientY;
+                            startWidth = parseInt(div.style.width) || 180;
+                            startHeight = parseInt(div.style.height) || 120;
+                            div.classList.add('dragging');
+                            document.body.style.userSelect = 'none';
+                        };
+                        
+                        const moveResize = function(e) {
+                            if (!isResizing) return;
+                            const clientX = e.clientX || e.touches?.[0]?.clientX || 0;
+                            const clientY = e.clientY || e.touches?.[0]?.clientY || 0;
+                            const dx = clientX - startResizeX;
+                            const dy = clientY - startResizeY;
+                            
+                            const newWidth = Math.max(100, startWidth + dx);
+                            const newHeight = Math.max(50, startHeight + dy);
+                            
+                            // Ограничиваем размеры внутри контейнера
+                            const containerRect = container.getBoundingClientRect();
+                            const divRect = div.getBoundingClientRect();
+                            const maxW = containerRect.width - parseInt(div.style.left) - 10;
+                            const maxH = containerRect.height - parseInt(div.style.top) - 10;
+                            
+                            div.style.width = Math.min(newWidth, maxW) + 'px';
+                            div.style.height = Math.min(newHeight, maxH) + 'px';
+                            
+                            if (index < data.notes.length) {
+                                data.notes[index].width = Math.min(newWidth, maxW);
+                                data.notes[index].height = Math.min(newHeight, maxH);
+                            }
+                            
+                            // Обновляем размер внутреннего контейнера
+                            const maxBottom2 = Math.max(0, ...data.notes.map(n => (n.y || 0) + (n.height || 120)));
+                            const maxRight2 = Math.max(0, ...data.notes.map(n => (n.x || 0) + (n.width || 180)));
+                            inner.style.height = Math.max(container.clientHeight, maxBottom2 + 50) + 'px';
+                            inner.style.width = Math.max(container.clientWidth, maxRight2 + 50) + 'px';
+                        };
+                        
+                        const endResize = function() {
+                            if (isResizing) {
+                                isResizing = false;
+                                div.classList.remove('dragging');
+                                document.body.style.userSelect = '';
+                                saveData();
+                            }
+                        };
+                        
+                        resizeHandle.addEventListener('mousedown', startResize);
+                        document.addEventListener('mousemove', moveResize);
+                        document.addEventListener('mouseup', endResize);
+                        
+                        resizeHandle.addEventListener('touchstart', startResize, { passive: false });
+                        document.addEventListener('touchmove', moveResize, { passive: false });
+                        document.addEventListener('touchend', endResize, { passive: false });
+                    }
                     
                     inner.appendChild(div);
                 });
@@ -2576,48 +2671,6 @@
             }
         }
 
-        function startNoteResize(event, index) {
-            event.preventDefault();
-            event.stopPropagation();
-            const note = event.target.closest('.note-item-free');
-            const container = note.closest('.notes-container');
-            const inner = container.querySelector('.notes-container-inner');
-            const startX = event.clientX || event.touches?.[0]?.clientX || 0;
-            const startY = event.clientY || event.touches?.[0]?.clientY || 0;
-            const startWidth = parseInt(note.style.width) || 180;
-            const startHeight = parseInt(note.style.height) || 120;
-            
-            function onMove(e) {
-                const clientX = e.clientX || e.touches?.[0]?.clientX || 0;
-                const clientY = e.clientY || e.touches?.[0]?.clientY || 0;
-                const newWidth = Math.max(100, startWidth + (clientX - startX));
-                const newHeight = Math.max(50, startHeight + (clientY - startY));
-                note.style.width = newWidth + 'px';
-                note.style.height = newHeight + 'px';
-                if (index < data.notes.length) {
-                    data.notes[index].width = newWidth;
-                    data.notes[index].height = newHeight;
-                }
-                const maxBottom = Math.max(0, ...data.notes.map(n => (n.y || 0) + (n.height || 120)));
-                const maxRight = Math.max(0, ...data.notes.map(n => (n.x || 0) + (n.width || 180)));
-                inner.style.height = Math.max(container.clientHeight, maxBottom + 50) + 'px';
-                inner.style.width = Math.max(container.clientWidth, maxRight + 50) + 'px';
-            }
-            
-            function onUp() {
-                document.removeEventListener('mousemove', onMove);
-                document.removeEventListener('mouseup', onUp);
-                document.removeEventListener('touchmove', onMove);
-                document.removeEventListener('touchend', onUp);
-                saveData();
-            }
-            
-            document.addEventListener('mousemove', onMove);
-            document.addEventListener('mouseup', onUp);
-            document.addEventListener('touchmove', onMove, { passive: true });
-            document.addEventListener('touchend', onUp, { passive: true });
-        }
-
         function setupNotePanelResize() {
             const handles = document.querySelectorAll('.resize-handle');
             handles.forEach(handle => {
@@ -2640,6 +2693,26 @@
                     document.addEventListener('mousemove', onMove);
                     document.addEventListener('mouseup', onUp);
                 });
+                
+                handle.addEventListener('touchstart', function(e) {
+                    e.preventDefault();
+                    const panel = this.closest('.notes-panel');
+                    const startX = e.touches[0].clientX;
+                    const startWidth = panel.offsetWidth;
+                    
+                    function onMove(ev) {
+                        const newWidth = Math.max(200, Math.min(500, startWidth + (startX - ev.touches[0].clientX)));
+                        panel.style.width = newWidth + 'px';
+                    }
+                    
+                    function onUp() {
+                        document.removeEventListener('touchmove', onMove);
+                        document.removeEventListener('touchend', onUp);
+                    }
+                    
+                    document.addEventListener('touchmove', onMove, { passive: false });
+                    document.addEventListener('touchend', onUp, { passive: false });
+                }, { passive: false });
             });
         }
 
