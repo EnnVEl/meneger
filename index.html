@@ -731,9 +731,22 @@
             color: #ff6b6b;
         }
 
+        .notification.danger {
+            border-color: #ff0000;
+            color: #ff0000;
+            border-width: 3px;
+            animation: pulse 1s ease-in-out;
+        }
+
         .notification.success {
             border-color: #51cf66;
             color: #51cf66;
+        }
+
+        @keyframes pulse {
+            0% { transform: translateX(-50%) scale(1); }
+            50% { transform: translateX(-50%) scale(1.05); }
+            100% { transform: translateX(-50%) scale(1); }
         }
 
         @keyframes slideDown {
@@ -1964,12 +1977,16 @@
                 data.balance += task.reward; // task.reward уже отрицательный
                 const spentAmount = Math.abs(task.reward);
                 
-                // Проверяем, ушел ли баланс в минус
-                if (data.balance < 0 && oldBalance >= 0) {
+                // Проверяем различные сценарии
+                if (data.balance < 0 && oldBalance < 0) {
+                    // Уже были в минусе и ушли ещё глубже
+                    showNotification(`⚠️ Вы закапываетесь ещё больше в долги... Постарайтесь вылезти из них! -${spentAmount}`, 'danger');
+                } else if (data.balance < 0 && oldBalance >= 0) {
+                    // Только что ушли в минус
                     showNotification('⚠️ Вы ушли в минус... Ничего страшного, но не залезайте глубоко в долги!', 'warning');
                 } else if (data.balance >= 0 && wasInDebt) {
                     // Вышли из минуса!
-                    showNotification(`🎉 Молодец! Ты выполнил задание "${task.name}" и вылез из долгов! Вот твои баллы! +${Math.abs(spentAmount)}`, 'success');
+                    showNotification(`🎉 Молодец! Ты выполнил задание "${task.name}" и вылез из долгов! Вот твои баллы! +${spentAmount}`, 'success');
                 } else {
                     showNotification(`🎉 Вы потратили ${spentAmount} баллов на "${task.name}"! Молодцы что накопили на него!`);
                 }
