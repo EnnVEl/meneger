@@ -849,6 +849,9 @@
             box-shadow: 0 4px 15px rgba(0,0,0,0.2);
             transition: box-shadow 0.2s;
             z-index: 5;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
         }
 
         .note-item-free:hover {
@@ -862,23 +865,32 @@
             cursor: grabbing;
         }
 
+        .note-item-free .note-textarea-wrapper {
+            flex: 1;
+            overflow: hidden;
+            position: relative;
+            padding-top: 25px;
+        }
+
         .note-item-free textarea {
             width: 100%;
+            height: 100%;
             background: transparent;
             border: none;
             color: var(--text-color, #ffffff);
             resize: none;
             font-family: inherit;
             font-size: 13px;
-            min-height: 35px;
             outline: none;
             padding: 5px;
             padding-right: 25px;
-            pointer-events: none;
-        }
-
-        .note-item-free textarea:focus {
-            pointer-events: auto;
+            overflow-y: auto;
+            overflow-x: hidden;
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
         }
 
         .note-item-free .note-delete {
@@ -925,7 +937,7 @@
             height: 20px;
             cursor: nw-resize;
             opacity: 0.5;
-            z-index: 25;
+            z-index: 30;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -933,6 +945,7 @@
             color: var(--text-color, #ffffff);
             user-select: none;
             touch-action: none;
+            background: transparent;
         }
 
         .note-item-free .note-resize-handle::after {
@@ -1762,18 +1775,14 @@
                         `;
                     }
                 } else {
-                    // Для завершённых заданий
                     const isFailed = task.status === 'failed';
                     const isCompleted = task.status === true;
                     
                     if (isCompleted) {
-                        // Выполненное задание - зеленая галочка
                         statusHtml = `<td><span class="status-checkbox" onclick="uncompleteTask(${index})">✅</span></td>`;
                     } else if (isFailed) {
-                        // Невыполненное задание - красный крестик
                         statusHtml = `<td><span class="status-fail-btn" onclick="returnTaskFromCompleted(${index})">✕</span></td>`;
                     } else {
-                        // На всякий случай (такого быть не должно)
                         statusHtml = `<td><span class="status-checkbox">❓</span></td>`;
                     }
                 }
@@ -2430,10 +2439,24 @@
                     div.innerHTML = `
                         <button class="note-delete" onclick="deleteNote(${index})">✕</button>
                         <button class="note-color-btn" onclick="changeNoteColor(${index})">✎</button>
-                        <textarea oninput="updateNoteText(${index}, this.value)" 
-                                  style="min-height: ${(note.height || 120) - 20}px;">${note.text || ''}</textarea>
+                        <div class="note-textarea-wrapper">
+                            <textarea oninput="updateNoteText(${index}, this.value)" 
+                                      style="min-height: ${(note.height || 120) - 20}px;">${note.text || ''}</textarea>
+                        </div>
                         <div class="note-resize-handle" onmousedown="startNoteResize(event, ${index})"></div>
                     `;
+                    
+                    // Находим textarea внутри div
+                    const textarea = div.querySelector('textarea');
+                    if (textarea) {
+                        // Делаем textarea кликабельной для редактирования
+                        textarea.addEventListener('mousedown', function(e) {
+                            e.stopPropagation();
+                        });
+                        textarea.addEventListener('touchstart', function(e) {
+                            e.stopPropagation();
+                        }, { passive: true });
+                    }
                     
                     // Перетаскивание заметок
                     let isDragging = false;
@@ -2526,16 +2549,18 @@
                             
                             // Ограничиваем размеры внутри контейнера
                             const containerRect = container.getBoundingClientRect();
-                            const divRect = div.getBoundingClientRect();
                             const maxW = containerRect.width - parseInt(div.style.left) - 10;
                             const maxH = containerRect.height - parseInt(div.style.top) - 10;
                             
-                            div.style.width = Math.min(newWidth, maxW) + 'px';
-                            div.style.height = Math.min(newHeight, maxH) + 'px';
+                            const finalWidth = Math.min(newWidth, maxW);
+                            const finalHeight = Math.min(newHeight, maxH);
+                            
+                            div.style.width = finalWidth + 'px';
+                            div.style.height = finalHeight + 'px';
                             
                             if (index < data.notes.length) {
-                                data.notes[index].width = Math.min(newWidth, maxW);
-                                data.notes[index].height = Math.min(newHeight, maxH);
+                                data.notes[index].width = finalWidth;
+                                data.notes[index].height = finalHeight;
                             }
                             
                             // Обновляем размер внутреннего контейнера
