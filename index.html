@@ -851,6 +851,7 @@
             display: flex;
             flex-direction: column;
             overflow: hidden;
+            cursor: grab;
         }
 
         .note-item-free:hover {
@@ -861,6 +862,7 @@
         .note-item-free.dragging {
             opacity: 0.7;
             z-index: 20;
+            cursor: grabbing;
         }
 
         .note-item-free .note-textarea-wrapper {
@@ -869,6 +871,7 @@
             position: relative;
             padding-top: 25px;
             min-height: 50px;
+            pointer-events: auto;
         }
 
         .note-item-free textarea {
@@ -893,6 +896,8 @@
             -webkit-user-select: text;
             user-select: text;
             min-height: 50px;
+            pointer-events: auto;
+            -webkit-overflow-scrolling: touch;
         }
 
         .note-item-free textarea:focus {
@@ -912,6 +917,7 @@
             opacity: 0.5;
             padding: 2px 5px;
             z-index: 25;
+            pointer-events: auto;
         }
 
         .note-item-free .note-delete:hover {
@@ -930,6 +936,7 @@
             opacity: 0.5;
             padding: 2px 5px;
             z-index: 25;
+            pointer-events: auto;
         }
 
         .note-item-free .note-color-btn:hover {
@@ -953,6 +960,7 @@
             user-select: none;
             touch-action: none;
             background: transparent;
+            pointer-events: auto;
         }
 
         .note-item-free .note-resize-handle::after {
@@ -963,33 +971,6 @@
 
         .note-item-free .note-resize-handle:hover::after {
             opacity: 1;
-        }
-
-        /* Хендл для перетаскивания заметки */
-        .note-item-free .note-drag-handle {
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            cursor: grab;
-            z-index: 1;
-        }
-
-        .note-item-free .note-drag-handle:hover {
-            cursor: grab;
-        }
-
-        .note-item-free .note-drag-handle:active {
-            cursor: grabbing;
-        }
-
-        .note-item-free textarea,
-        .note-item-free .note-delete,
-        .note-item-free .note-color-btn,
-        .note-item-free .note-resize-handle {
-            position: relative;
-            z-index: 2;
         }
 
         .notes-header {
@@ -1379,9 +1360,6 @@
                 cursor: default;
             }
             .note-item-free .note-resize-handle {
-                cursor: default;
-            }
-            .note-item-free .note-drag-handle {
                 cursor: default;
             }
         }
@@ -2473,171 +2451,177 @@
                     const noteColor = note.color || 'rgba(255,255,255,0.12)';
                     div.style.background = noteColor;
                     
-                    div.innerHTML = `
-                        <div class="note-drag-handle"></div>
-                        <button class="note-delete" onclick="deleteNote(${index})">✕</button>
-                        <button class="note-color-btn" onclick="changeNoteColor(${index})">✎</button>
-                        <div class="note-textarea-wrapper">
-                            <textarea oninput="updateNoteText(${index}, this.value)" 
-                                      style="min-height: ${(note.height || 120) - 20}px;">${note.text || ''}</textarea>
-                        </div>
-                        <div class="note-resize-handle" onmousedown="startNoteResize(event, ${index})"></div>
-                    `;
+                    // Создаем обертку для textarea
+                    const wrapper = document.createElement('div');
+                    wrapper.className = 'note-textarea-wrapper';
                     
-                    // Находим textarea и делаем её полностью функциональной
-                    const textarea = div.querySelector('textarea');
-                    if (textarea) {
-                        // Останавливаем всплытие событий, чтобы не мешать перетаскиванию
-                        textarea.addEventListener('mousedown', function(e) {
-                            e.stopPropagation();
-                        });
-                        textarea.addEventListener('touchstart', function(e) {
-                            e.stopPropagation();
-                        }, { passive: true });
-                        
-                        // Разрешаем ввод текста
-                        textarea.addEventListener('focus', function() {
-                            // Ничего не делаем, просто разрешаем фокус
-                        });
-                        
-                        // Предотвращаем закрытие клавиатуры при прикосновении к textarea
-                        textarea.addEventListener('touchend', function(e) {
-                            e.stopPropagation();
-                        });
-                    }
+                    const textarea = document.createElement('textarea');
+                    textarea.value = note.text || '';
+                    textarea.style.minHeight = (note.height || 120) - 20 + 'px';
+                    textarea.addEventListener('input', function() {
+                        updateNoteText(index, this.value);
+                    });
+                    // Предотвращаем всплытие событий от textarea
+                    textarea.addEventListener('mousedown', function(e) {
+                        e.stopPropagation();
+                    });
+                    textarea.addEventListener('touchstart', function(e) {
+                        e.stopPropagation();
+                    }, { passive: true });
+                    textarea.addEventListener('touchmove', function(e) {
+                        e.stopPropagation();
+                    }, { passive: true });
                     
-                    // Перетаскивание заметок через drag-хендл
+                    wrapper.appendChild(textarea);
+                    
+                    const deleteBtn = document.createElement('button');
+                    deleteBtn.className = 'note-delete';
+                    deleteBtn.textContent = '✕';
+                    deleteBtn.onclick = function(e) {
+                        e.stopPropagation();
+                        deleteNote(index);
+                    };
+                    
+                    const colorBtn = document.createElement('button');
+                    colorBtn.className = 'note-color-btn';
+                    colorBtn.textContent = '✎';
+                    colorBtn.onclick = function(e) {
+                        e.stopPropagation();
+                        changeNoteColor(index);
+                    };
+                    
+                    const resizeHandle = document.createElement('div');
+                    resizeHandle.className = 'note-resize-handle';
+                    
+                    div.appendChild(deleteBtn);
+                    div.appendChild(colorBtn);
+                    div.appendChild(wrapper);
+                    div.appendChild(resizeHandle);
+                    
+                    // Перетаскивание заметок
                     let isDragging = false;
                     let startX, startY, origX, origY;
-                    const dragHandle = div.querySelector('.note-drag-handle');
                     
-                    if (dragHandle) {
-                        const startDrag = function(e) {
-                            // Игнорируем если клик по кнопкам или текстовому полю
-                            if (e.target.closest('.note-delete') || e.target.closest('.note-color-btn') || e.target.closest('.note-resize-handle') || e.target.tagName === 'TEXTAREA') return;
-                            
-                            const maxZ = Math.max(20, ...data.notes.map(n => n.zIndex || 5));
-                            data.notes[index].zIndex = maxZ + 1;
-                            div.style.zIndex = maxZ + 1;
-                            
-                            isDragging = true;
-                            const clientX = e.clientX || e.touches?.[0]?.clientX || 0;
-                            const clientY = e.clientY || e.touches?.[0]?.clientY || 0;
-                            startX = clientX;
-                            startY = clientY;
-                            origX = parseInt(div.style.left);
-                            origY = parseInt(div.style.top);
-                            div.classList.add('dragging');
-                            e.preventDefault?.();
-                        };
+                    const startDrag = function(e) {
+                        if (e.target.closest('.note-delete') || e.target.closest('.note-color-btn') || e.target.closest('.note-resize-handle') || e.target.tagName === 'TEXTAREA') return;
                         
-                        const moveDrag = function(e) {
-                            if (!isDragging) return;
-                            const clientX = e.clientX || e.touches?.[0]?.clientX || 0;
-                            const clientY = e.clientY || e.touches?.[0]?.clientY || 0;
-                            const dx = clientX - startX;
-                            const dy = clientY - startY;
-                            const containerRect = container.getBoundingClientRect();
-                            const newX = Math.max(0, Math.min(inner.clientWidth - parseInt(div.style.width) || 180, origX + dx));
-                            const newY = Math.max(0, Math.min(inner.clientHeight - parseInt(div.style.height) || 120, origY + dy));
-                            div.style.left = newX + 'px';
-                            div.style.top = newY + 'px';
-                            if (index < data.notes.length) {
-                                data.notes[index].x = newX;
-                                data.notes[index].y = newY;
-                            }
-                            const maxBottom2 = Math.max(0, ...data.notes.map(n => (n.y || 0) + (n.height || 120)));
-                            const maxRight2 = Math.max(0, ...data.notes.map(n => (n.x || 0) + (n.width || 180)));
-                            inner.style.height = Math.max(container.clientHeight, maxBottom2 + 50) + 'px';
-                            inner.style.width = Math.max(container.clientWidth, maxRight2 + 50) + 'px';
-                        };
+                        const maxZ = Math.max(20, ...data.notes.map(n => n.zIndex || 5));
+                        data.notes[index].zIndex = maxZ + 1;
+                        div.style.zIndex = maxZ + 1;
                         
-                        const endDrag = function() {
-                            if (isDragging) {
-                                isDragging = false;
-                                div.classList.remove('dragging');
-                                saveData();
-                            }
-                        };
-                        
-                        dragHandle.addEventListener('mousedown', startDrag);
-                        dragHandle.addEventListener('touchstart', startDrag, { passive: true });
-                        document.addEventListener('mousemove', moveDrag);
-                        document.addEventListener('mouseup', endDrag);
-                        document.addEventListener('touchmove', moveDrag, { passive: true });
-                        document.addEventListener('touchend', endDrag, { passive: true });
-                    }
+                        isDragging = true;
+                        const clientX = e.clientX || e.touches?.[0]?.clientX || 0;
+                        const clientY = e.clientY || e.touches?.[0]?.clientY || 0;
+                        startX = clientX;
+                        startY = clientY;
+                        origX = parseInt(div.style.left);
+                        origY = parseInt(div.style.top);
+                        div.classList.add('dragging');
+                        e.preventDefault?.();
+                    };
+                    
+                    const moveDrag = function(e) {
+                        if (!isDragging) return;
+                        const clientX = e.clientX || e.touches?.[0]?.clientX || 0;
+                        const clientY = e.clientY || e.touches?.[0]?.clientY || 0;
+                        const dx = clientX - startX;
+                        const dy = clientY - startY;
+                        const containerRect = container.getBoundingClientRect();
+                        const newX = Math.max(0, Math.min(inner.clientWidth - parseInt(div.style.width) || 180, origX + dx));
+                        const newY = Math.max(0, Math.min(inner.clientHeight - parseInt(div.style.height) || 120, origY + dy));
+                        div.style.left = newX + 'px';
+                        div.style.top = newY + 'px';
+                        if (index < data.notes.length) {
+                            data.notes[index].x = newX;
+                            data.notes[index].y = newY;
+                        }
+                        const maxBottom2 = Math.max(0, ...data.notes.map(n => (n.y || 0) + (n.height || 120)));
+                        const maxRight2 = Math.max(0, ...data.notes.map(n => (n.x || 0) + (n.width || 180)));
+                        inner.style.height = Math.max(container.clientHeight, maxBottom2 + 50) + 'px';
+                        inner.style.width = Math.max(container.clientWidth, maxRight2 + 50) + 'px';
+                    };
+                    
+                    const endDrag = function() {
+                        if (isDragging) {
+                            isDragging = false;
+                            div.classList.remove('dragging');
+                            saveData();
+                        }
+                    };
+                    
+                    div.addEventListener('mousedown', startDrag);
+                    document.addEventListener('mousemove', moveDrag);
+                    document.addEventListener('mouseup', endDrag);
+                    
+                    div.addEventListener('touchstart', startDrag, { passive: true });
+                    document.addEventListener('touchmove', moveDrag, { passive: true });
+                    document.addEventListener('touchend', endDrag, { passive: true });
                     
                     // Изменение размера заметки через правый нижний угол
-                    const resizeHandle = div.querySelector('.note-resize-handle');
-                    if (resizeHandle) {
-                        let isResizing = false;
-                        let startResizeX, startResizeY, startWidth, startHeight;
+                    let isResizing = false;
+                    let startResizeX, startResizeY, startWidth, startHeight;
+                    
+                    const startResize = function(e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        isResizing = true;
+                        const clientX = e.clientX || e.touches?.[0]?.clientX || 0;
+                        const clientY = e.clientY || e.touches?.[0]?.clientY || 0;
+                        startResizeX = clientX;
+                        startResizeY = clientY;
+                        startWidth = parseInt(div.style.width) || 180;
+                        startHeight = parseInt(div.style.height) || 120;
+                        div.classList.add('dragging');
+                        document.body.style.userSelect = 'none';
+                    };
+                    
+                    const moveResize = function(e) {
+                        if (!isResizing) return;
+                        const clientX = e.clientX || e.touches?.[0]?.clientX || 0;
+                        const clientY = e.clientY || e.touches?.[0]?.clientY || 0;
+                        const dx = clientX - startResizeX;
+                        const dy = clientY - startResizeY;
                         
-                        const startResize = function(e) {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            isResizing = true;
-                            const clientX = e.clientX || e.touches?.[0]?.clientX || 0;
-                            const clientY = e.clientY || e.touches?.[0]?.clientY || 0;
-                            startResizeX = clientX;
-                            startResizeY = clientY;
-                            startWidth = parseInt(div.style.width) || 180;
-                            startHeight = parseInt(div.style.height) || 120;
-                            div.classList.add('dragging');
-                            document.body.style.userSelect = 'none';
-                        };
+                        const newWidth = Math.max(100, startWidth + dx);
+                        const newHeight = Math.max(50, startHeight + dy);
                         
-                        const moveResize = function(e) {
-                            if (!isResizing) return;
-                            const clientX = e.clientX || e.touches?.[0]?.clientX || 0;
-                            const clientY = e.clientY || e.touches?.[0]?.clientY || 0;
-                            const dx = clientX - startResizeX;
-                            const dy = clientY - startResizeY;
-                            
-                            const newWidth = Math.max(100, startWidth + dx);
-                            const newHeight = Math.max(50, startHeight + dy);
-                            
-                            // Ограничиваем размеры внутри контейнера
-                            const containerRect = container.getBoundingClientRect();
-                            const maxW = containerRect.width - parseInt(div.style.left) - 10;
-                            const maxH = containerRect.height - parseInt(div.style.top) - 10;
-                            
-                            const finalWidth = Math.min(newWidth, maxW);
-                            const finalHeight = Math.min(newHeight, maxH);
-                            
-                            div.style.width = finalWidth + 'px';
-                            div.style.height = finalHeight + 'px';
-                            
-                            if (index < data.notes.length) {
-                                data.notes[index].width = finalWidth;
-                                data.notes[index].height = finalHeight;
-                            }
-                            
-                            // Обновляем размер внутреннего контейнера
-                            const maxBottom2 = Math.max(0, ...data.notes.map(n => (n.y || 0) + (n.height || 120)));
-                            const maxRight2 = Math.max(0, ...data.notes.map(n => (n.x || 0) + (n.width || 180)));
-                            inner.style.height = Math.max(container.clientHeight, maxBottom2 + 50) + 'px';
-                            inner.style.width = Math.max(container.clientWidth, maxRight2 + 50) + 'px';
-                        };
+                        const containerRect = container.getBoundingClientRect();
+                        const maxW = containerRect.width - parseInt(div.style.left) - 10;
+                        const maxH = containerRect.height - parseInt(div.style.top) - 10;
                         
-                        const endResize = function() {
-                            if (isResizing) {
-                                isResizing = false;
-                                div.classList.remove('dragging');
-                                document.body.style.userSelect = '';
-                                saveData();
-                            }
-                        };
+                        const finalWidth = Math.min(newWidth, maxW);
+                        const finalHeight = Math.min(newHeight, maxH);
                         
-                        resizeHandle.addEventListener('mousedown', startResize);
-                        document.addEventListener('mousemove', moveResize);
-                        document.addEventListener('mouseup', endResize);
+                        div.style.width = finalWidth + 'px';
+                        div.style.height = finalHeight + 'px';
                         
-                        resizeHandle.addEventListener('touchstart', startResize, { passive: false });
-                        document.addEventListener('touchmove', moveResize, { passive: false });
-                        document.addEventListener('touchend', endResize, { passive: false });
-                    }
+                        if (index < data.notes.length) {
+                            data.notes[index].width = finalWidth;
+                            data.notes[index].height = finalHeight;
+                        }
+                        
+                        const maxBottom2 = Math.max(0, ...data.notes.map(n => (n.y || 0) + (n.height || 120)));
+                        const maxRight2 = Math.max(0, ...data.notes.map(n => (n.x || 0) + (n.width || 180)));
+                        inner.style.height = Math.max(container.clientHeight, maxBottom2 + 50) + 'px';
+                        inner.style.width = Math.max(container.clientWidth, maxRight2 + 50) + 'px';
+                    };
+                    
+                    const endResize = function() {
+                        if (isResizing) {
+                            isResizing = false;
+                            div.classList.remove('dragging');
+                            document.body.style.userSelect = '';
+                            saveData();
+                        }
+                    };
+                    
+                    resizeHandle.addEventListener('mousedown', startResize);
+                    document.addEventListener('mousemove', moveResize);
+                    document.addEventListener('mouseup', endResize);
+                    
+                    resizeHandle.addEventListener('touchstart', startResize, { passive: false });
+                    document.addEventListener('touchmove', moveResize, { passive: false });
+                    document.addEventListener('touchend', endResize, { passive: false });
                     
                     inner.appendChild(div);
                 });
