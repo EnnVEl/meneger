@@ -845,13 +845,13 @@
             min-width: 100px;
             min-height: 50px;
             border: 1px solid rgba(255, 255, 255, 0.08);
+            cursor: grab;
             box-shadow: 0 4px 15px rgba(0,0,0,0.2);
             transition: box-shadow 0.2s;
             z-index: 5;
             display: flex;
             flex-direction: column;
             overflow: hidden;
-            cursor: grab;
         }
 
         .note-item-free:hover {
@@ -870,8 +870,6 @@
             overflow: hidden;
             position: relative;
             padding-top: 25px;
-            min-height: 50px;
-            pointer-events: auto;
         }
 
         .note-item-free textarea {
@@ -895,14 +893,11 @@
             bottom: 0;
             -webkit-user-select: text;
             user-select: text;
-            min-height: 50px;
-            pointer-events: auto;
-            -webkit-overflow-scrolling: touch;
         }
 
         .note-item-free textarea:focus {
-            outline: none;
-            background: rgba(255, 255, 255, 0.05);
+            outline: 2px solid rgba(255, 255, 255, 0.2);
+            outline-offset: -2px;
         }
 
         .note-item-free .note-delete {
@@ -917,7 +912,6 @@
             opacity: 0.5;
             padding: 2px 5px;
             z-index: 25;
-            pointer-events: auto;
         }
 
         .note-item-free .note-delete:hover {
@@ -936,7 +930,6 @@
             opacity: 0.5;
             padding: 2px 5px;
             z-index: 25;
-            pointer-events: auto;
         }
 
         .note-item-free .note-color-btn:hover {
@@ -960,7 +953,6 @@
             user-select: none;
             touch-action: none;
             background: transparent;
-            pointer-events: auto;
         }
 
         .note-item-free .note-resize-handle::after {
@@ -1548,10 +1540,13 @@
         let isMobile = false;
         let piggyOverlayOpen = false;
 
+        // Проверка на Telegram Web App
+        const isTelegram = window.Telegram && window.Telegram.WebApp;
+
         function checkMobile() {
             const isTouch = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
             const isMobileUA = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-            isMobile = isTouch || isMobileUA || window.innerWidth < 768;
+            isMobile = isTouch || isMobileUA || window.innerWidth < 768 || isTelegram;
             
             if (isMobile) {
                 document.getElementById('app').classList.add('is-mobile');
@@ -2451,52 +2446,48 @@
                     const noteColor = note.color || 'rgba(255,255,255,0.12)';
                     div.style.background = noteColor;
                     
-                    // Создаем обертку для textarea
-                    const wrapper = document.createElement('div');
-                    wrapper.className = 'note-textarea-wrapper';
+                    div.innerHTML = `
+                        <button class="note-delete" onclick="deleteNote(${index})">✕</button>
+                        <button class="note-color-btn" onclick="changeNoteColor(${index})">✎</button>
+                        <div class="note-textarea-wrapper">
+                            <textarea oninput="updateNoteText(${index}, this.value)" 
+                                      onfocus="handleTextareaFocus(event)"
+                                      style="min-height: ${(note.height || 120) - 20}px;">${note.text || ''}</textarea>
+                        </div>
+                        <div class="note-resize-handle" onmousedown="startNoteResize(event, ${index})"></div>
+                    `;
                     
-                    const textarea = document.createElement('textarea');
-                    textarea.value = note.text || '';
-                    textarea.style.minHeight = (note.height || 120) - 20 + 'px';
-                    textarea.addEventListener('input', function() {
-                        updateNoteText(index, this.value);
-                    });
-                    // Предотвращаем всплытие событий от textarea
-                    textarea.addEventListener('mousedown', function(e) {
-                        e.stopPropagation();
-                    });
-                    textarea.addEventListener('touchstart', function(e) {
-                        e.stopPropagation();
-                    }, { passive: true });
-                    textarea.addEventListener('touchmove', function(e) {
-                        e.stopPropagation();
-                    }, { passive: true });
-                    
-                    wrapper.appendChild(textarea);
-                    
-                    const deleteBtn = document.createElement('button');
-                    deleteBtn.className = 'note-delete';
-                    deleteBtn.textContent = '✕';
-                    deleteBtn.onclick = function(e) {
-                        e.stopPropagation();
-                        deleteNote(index);
-                    };
-                    
-                    const colorBtn = document.createElement('button');
-                    colorBtn.className = 'note-color-btn';
-                    colorBtn.textContent = '✎';
-                    colorBtn.onclick = function(e) {
-                        e.stopPropagation();
-                        changeNoteColor(index);
-                    };
-                    
-                    const resizeHandle = document.createElement('div');
-                    resizeHandle.className = 'note-resize-handle';
-                    
-                    div.appendChild(deleteBtn);
-                    div.appendChild(colorBtn);
-                    div.appendChild(wrapper);
-                    div.appendChild(resizeHandle);
+                    // Находим textarea внутри div
+                    const textarea = div.querySelector('textarea');
+                    if (textarea) {
+                        // Для Telegram Web App - предотвращаем закрытие клавиатуры
+                        textarea.addEventListener('focus', function(e) {
+                            e.stopPropagation();
+                            // Принудительно показываем клавиатуру
+                            this.setSelectionRange(this.value.length, this.value.length);
+                            // В Telegram Web App нужно вызвать focus с задержкой
+                            setTimeout(() => {
+                                this.focus();
+                            }, 50);
+                        });
+                        
+                        textarea.addEventListener('blur', function(e) {
+                            // Сохраняем текст при потере фокуса
+                            const noteIndex = parseInt(div.dataset.index);
+                            if (!isNaN(noteIndex) && noteIndex < data.notes.length) {
+                                data.notes[noteIndex].text = this.value;
+                                saveData();
+                            }
+                        });
+                        
+                        textarea.addEventListener('touchstart', function(e) {
+                            e.stopPropagation();
+                        }, { passive: true });
+                        
+                        textarea.addEventListener('mousedown', function(e) {
+                            e.stopPropagation();
+                        });
+                    }
                     
                     // Перетаскивание заметок
                     let isDragging = false;
@@ -2558,74 +2549,90 @@
                     document.addEventListener('touchend', endDrag, { passive: true });
                     
                     // Изменение размера заметки через правый нижний угол
-                    let isResizing = false;
-                    let startResizeX, startResizeY, startWidth, startHeight;
-                    
-                    const startResize = function(e) {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        isResizing = true;
-                        const clientX = e.clientX || e.touches?.[0]?.clientX || 0;
-                        const clientY = e.clientY || e.touches?.[0]?.clientY || 0;
-                        startResizeX = clientX;
-                        startResizeY = clientY;
-                        startWidth = parseInt(div.style.width) || 180;
-                        startHeight = parseInt(div.style.height) || 120;
-                        div.classList.add('dragging');
-                        document.body.style.userSelect = 'none';
-                    };
-                    
-                    const moveResize = function(e) {
-                        if (!isResizing) return;
-                        const clientX = e.clientX || e.touches?.[0]?.clientX || 0;
-                        const clientY = e.clientY || e.touches?.[0]?.clientY || 0;
-                        const dx = clientX - startResizeX;
-                        const dy = clientY - startResizeY;
+                    const resizeHandle = div.querySelector('.note-resize-handle');
+                    if (resizeHandle) {
+                        let isResizing = false;
+                        let startResizeX, startResizeY, startWidth, startHeight;
                         
-                        const newWidth = Math.max(100, startWidth + dx);
-                        const newHeight = Math.max(50, startHeight + dy);
+                        const startResize = function(e) {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            isResizing = true;
+                            const clientX = e.clientX || e.touches?.[0]?.clientX || 0;
+                            const clientY = e.clientY || e.touches?.[0]?.clientY || 0;
+                            startResizeX = clientX;
+                            startResizeY = clientY;
+                            startWidth = parseInt(div.style.width) || 180;
+                            startHeight = parseInt(div.style.height) || 120;
+                            div.classList.add('dragging');
+                            document.body.style.userSelect = 'none';
+                        };
                         
-                        const containerRect = container.getBoundingClientRect();
-                        const maxW = containerRect.width - parseInt(div.style.left) - 10;
-                        const maxH = containerRect.height - parseInt(div.style.top) - 10;
+                        const moveResize = function(e) {
+                            if (!isResizing) return;
+                            const clientX = e.clientX || e.touches?.[0]?.clientX || 0;
+                            const clientY = e.clientY || e.touches?.[0]?.clientY || 0;
+                            const dx = clientX - startResizeX;
+                            const dy = clientY - startResizeY;
+                            
+                            const newWidth = Math.max(100, startWidth + dx);
+                            const newHeight = Math.max(50, startHeight + dy);
+                            
+                            // Ограничиваем размеры внутри контейнера
+                            const containerRect = container.getBoundingClientRect();
+                            const maxW = containerRect.width - parseInt(div.style.left) - 10;
+                            const maxH = containerRect.height - parseInt(div.style.top) - 10;
+                            
+                            const finalWidth = Math.min(newWidth, maxW);
+                            const finalHeight = Math.min(newHeight, maxH);
+                            
+                            div.style.width = finalWidth + 'px';
+                            div.style.height = finalHeight + 'px';
+                            
+                            if (index < data.notes.length) {
+                                data.notes[index].width = finalWidth;
+                                data.notes[index].height = finalHeight;
+                            }
+                            
+                            // Обновляем размер внутреннего контейнера
+                            const maxBottom2 = Math.max(0, ...data.notes.map(n => (n.y || 0) + (n.height || 120)));
+                            const maxRight2 = Math.max(0, ...data.notes.map(n => (n.x || 0) + (n.width || 180)));
+                            inner.style.height = Math.max(container.clientHeight, maxBottom2 + 50) + 'px';
+                            inner.style.width = Math.max(container.clientWidth, maxRight2 + 50) + 'px';
+                        };
                         
-                        const finalWidth = Math.min(newWidth, maxW);
-                        const finalHeight = Math.min(newHeight, maxH);
+                        const endResize = function() {
+                            if (isResizing) {
+                                isResizing = false;
+                                div.classList.remove('dragging');
+                                document.body.style.userSelect = '';
+                                saveData();
+                            }
+                        };
                         
-                        div.style.width = finalWidth + 'px';
-                        div.style.height = finalHeight + 'px';
+                        resizeHandle.addEventListener('mousedown', startResize);
+                        document.addEventListener('mousemove', moveResize);
+                        document.addEventListener('mouseup', endResize);
                         
-                        if (index < data.notes.length) {
-                            data.notes[index].width = finalWidth;
-                            data.notes[index].height = finalHeight;
-                        }
-                        
-                        const maxBottom2 = Math.max(0, ...data.notes.map(n => (n.y || 0) + (n.height || 120)));
-                        const maxRight2 = Math.max(0, ...data.notes.map(n => (n.x || 0) + (n.width || 180)));
-                        inner.style.height = Math.max(container.clientHeight, maxBottom2 + 50) + 'px';
-                        inner.style.width = Math.max(container.clientWidth, maxRight2 + 50) + 'px';
-                    };
-                    
-                    const endResize = function() {
-                        if (isResizing) {
-                            isResizing = false;
-                            div.classList.remove('dragging');
-                            document.body.style.userSelect = '';
-                            saveData();
-                        }
-                    };
-                    
-                    resizeHandle.addEventListener('mousedown', startResize);
-                    document.addEventListener('mousemove', moveResize);
-                    document.addEventListener('mouseup', endResize);
-                    
-                    resizeHandle.addEventListener('touchstart', startResize, { passive: false });
-                    document.addEventListener('touchmove', moveResize, { passive: false });
-                    document.addEventListener('touchend', endResize, { passive: false });
+                        resizeHandle.addEventListener('touchstart', startResize, { passive: false });
+                        document.addEventListener('touchmove', moveResize, { passive: false });
+                        document.addEventListener('touchend', endResize, { passive: false });
+                    }
                     
                     inner.appendChild(div);
                 });
             });
+        }
+
+        function handleTextareaFocus(event) {
+            // Для Telegram Web App - предотвращаем закрытие
+            if (isTelegram) {
+                event.target.setSelectionRange(event.target.value.length, event.target.value.length);
+                // Принудительно держим фокус
+                setTimeout(() => {
+                    event.target.focus();
+                }, 100);
+            }
         }
 
         function changeNoteColor(index) {
