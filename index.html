@@ -845,7 +845,6 @@
             min-width: 100px;
             min-height: 50px;
             border: 1px solid rgba(255, 255, 255, 0.08);
-            cursor: grab;
             box-shadow: 0 4px 15px rgba(0,0,0,0.2);
             transition: box-shadow 0.2s;
             z-index: 5;
@@ -862,7 +861,6 @@
         .note-item-free.dragging {
             opacity: 0.7;
             z-index: 20;
-            cursor: grabbing;
         }
 
         .note-item-free .note-textarea-wrapper {
@@ -965,6 +963,33 @@
 
         .note-item-free .note-resize-handle:hover::after {
             opacity: 1;
+        }
+
+        /* Хендл для перетаскивания заметки */
+        .note-item-free .note-drag-handle {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            cursor: grab;
+            z-index: 1;
+        }
+
+        .note-item-free .note-drag-handle:hover {
+            cursor: grab;
+        }
+
+        .note-item-free .note-drag-handle:active {
+            cursor: grabbing;
+        }
+
+        .note-item-free textarea,
+        .note-item-free .note-delete,
+        .note-item-free .note-color-btn,
+        .note-item-free .note-resize-handle {
+            position: relative;
+            z-index: 2;
         }
 
         .notes-header {
@@ -1354,6 +1379,9 @@
                 cursor: default;
             }
             .note-item-free .note-resize-handle {
+                cursor: default;
+            }
+            .note-item-free .note-drag-handle {
                 cursor: default;
             }
         }
@@ -2446,6 +2474,7 @@
                     div.style.background = noteColor;
                     
                     div.innerHTML = `
+                        <div class="note-drag-handle"></div>
                         <button class="note-delete" onclick="deleteNote(${index})">✕</button>
                         <button class="note-color-btn" onclick="changeNoteColor(${index})">✎</button>
                         <div class="note-textarea-wrapper">
@@ -2470,67 +2499,74 @@
                         textarea.addEventListener('focus', function() {
                             // Ничего не делаем, просто разрешаем фокус
                         });
+                        
+                        // Предотвращаем закрытие клавиатуры при прикосновении к textarea
+                        textarea.addEventListener('touchend', function(e) {
+                            e.stopPropagation();
+                        });
                     }
                     
-                    // Перетаскивание заметок
+                    // Перетаскивание заметок через drag-хендл
                     let isDragging = false;
                     let startX, startY, origX, origY;
+                    const dragHandle = div.querySelector('.note-drag-handle');
                     
-                    const startDrag = function(e) {
-                        // Игнорируем если клик по кнопкам или текстовому полю
-                        if (e.target.closest('.note-delete') || e.target.closest('.note-color-btn') || e.target.closest('.note-resize-handle') || e.target.tagName === 'TEXTAREA') return;
+                    if (dragHandle) {
+                        const startDrag = function(e) {
+                            // Игнорируем если клик по кнопкам или текстовому полю
+                            if (e.target.closest('.note-delete') || e.target.closest('.note-color-btn') || e.target.closest('.note-resize-handle') || e.target.tagName === 'TEXTAREA') return;
+                            
+                            const maxZ = Math.max(20, ...data.notes.map(n => n.zIndex || 5));
+                            data.notes[index].zIndex = maxZ + 1;
+                            div.style.zIndex = maxZ + 1;
+                            
+                            isDragging = true;
+                            const clientX = e.clientX || e.touches?.[0]?.clientX || 0;
+                            const clientY = e.clientY || e.touches?.[0]?.clientY || 0;
+                            startX = clientX;
+                            startY = clientY;
+                            origX = parseInt(div.style.left);
+                            origY = parseInt(div.style.top);
+                            div.classList.add('dragging');
+                            e.preventDefault?.();
+                        };
                         
-                        const maxZ = Math.max(20, ...data.notes.map(n => n.zIndex || 5));
-                        data.notes[index].zIndex = maxZ + 1;
-                        div.style.zIndex = maxZ + 1;
+                        const moveDrag = function(e) {
+                            if (!isDragging) return;
+                            const clientX = e.clientX || e.touches?.[0]?.clientX || 0;
+                            const clientY = e.clientY || e.touches?.[0]?.clientY || 0;
+                            const dx = clientX - startX;
+                            const dy = clientY - startY;
+                            const containerRect = container.getBoundingClientRect();
+                            const newX = Math.max(0, Math.min(inner.clientWidth - parseInt(div.style.width) || 180, origX + dx));
+                            const newY = Math.max(0, Math.min(inner.clientHeight - parseInt(div.style.height) || 120, origY + dy));
+                            div.style.left = newX + 'px';
+                            div.style.top = newY + 'px';
+                            if (index < data.notes.length) {
+                                data.notes[index].x = newX;
+                                data.notes[index].y = newY;
+                            }
+                            const maxBottom2 = Math.max(0, ...data.notes.map(n => (n.y || 0) + (n.height || 120)));
+                            const maxRight2 = Math.max(0, ...data.notes.map(n => (n.x || 0) + (n.width || 180)));
+                            inner.style.height = Math.max(container.clientHeight, maxBottom2 + 50) + 'px';
+                            inner.style.width = Math.max(container.clientWidth, maxRight2 + 50) + 'px';
+                        };
                         
-                        isDragging = true;
-                        const clientX = e.clientX || e.touches?.[0]?.clientX || 0;
-                        const clientY = e.clientY || e.touches?.[0]?.clientY || 0;
-                        startX = clientX;
-                        startY = clientY;
-                        origX = parseInt(div.style.left);
-                        origY = parseInt(div.style.top);
-                        div.classList.add('dragging');
-                        e.preventDefault?.();
-                    };
-                    
-                    const moveDrag = function(e) {
-                        if (!isDragging) return;
-                        const clientX = e.clientX || e.touches?.[0]?.clientX || 0;
-                        const clientY = e.clientY || e.touches?.[0]?.clientY || 0;
-                        const dx = clientX - startX;
-                        const dy = clientY - startY;
-                        const containerRect = container.getBoundingClientRect();
-                        const newX = Math.max(0, Math.min(inner.clientWidth - parseInt(div.style.width) || 180, origX + dx));
-                        const newY = Math.max(0, Math.min(inner.clientHeight - parseInt(div.style.height) || 120, origY + dy));
-                        div.style.left = newX + 'px';
-                        div.style.top = newY + 'px';
-                        if (index < data.notes.length) {
-                            data.notes[index].x = newX;
-                            data.notes[index].y = newY;
-                        }
-                        const maxBottom2 = Math.max(0, ...data.notes.map(n => (n.y || 0) + (n.height || 120)));
-                        const maxRight2 = Math.max(0, ...data.notes.map(n => (n.x || 0) + (n.width || 180)));
-                        inner.style.height = Math.max(container.clientHeight, maxBottom2 + 50) + 'px';
-                        inner.style.width = Math.max(container.clientWidth, maxRight2 + 50) + 'px';
-                    };
-                    
-                    const endDrag = function() {
-                        if (isDragging) {
-                            isDragging = false;
-                            div.classList.remove('dragging');
-                            saveData();
-                        }
-                    };
-                    
-                    div.addEventListener('mousedown', startDrag);
-                    document.addEventListener('mousemove', moveDrag);
-                    document.addEventListener('mouseup', endDrag);
-                    
-                    div.addEventListener('touchstart', startDrag, { passive: true });
-                    document.addEventListener('touchmove', moveDrag, { passive: true });
-                    document.addEventListener('touchend', endDrag, { passive: true });
+                        const endDrag = function() {
+                            if (isDragging) {
+                                isDragging = false;
+                                div.classList.remove('dragging');
+                                saveData();
+                            }
+                        };
+                        
+                        dragHandle.addEventListener('mousedown', startDrag);
+                        dragHandle.addEventListener('touchstart', startDrag, { passive: true });
+                        document.addEventListener('mousemove', moveDrag);
+                        document.addEventListener('mouseup', endDrag);
+                        document.addEventListener('touchmove', moveDrag, { passive: true });
+                        document.addEventListener('touchend', endDrag, { passive: true });
+                    }
                     
                     // Изменение размера заметки через правый нижний угол
                     const resizeHandle = div.querySelector('.note-resize-handle');
