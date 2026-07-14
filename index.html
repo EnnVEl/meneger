@@ -838,38 +838,41 @@
 
         .note-item-free {
             position: absolute;
-            background: rgba(255, 255, 255, 0.12);
-            backdrop-filter: blur(5px);
             border-radius: 8px;
-            padding: 8px;
-            min-width: 100px;
-            min-height: 50px;
-            border: 1px solid rgba(255, 255, 255, 0.08);
+            padding: 0;
+            min-width: 120px;
+            min-height: 80px;
+            border: 2px solid rgba(255, 255, 255, 0.15);
             cursor: grab;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
             transition: box-shadow 0.2s;
             z-index: 5;
             display: flex;
             flex-direction: column;
             overflow: hidden;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(5px);
         }
 
         .note-item-free:hover {
             border-color: var(--text-color, #ffffff);
-            box-shadow: 0 6px 25px rgba(0,0,0,0.3);
+            box-shadow: 0 6px 25px rgba(0,0,0,0.4);
         }
 
         .note-item-free.dragging {
-            opacity: 0.7;
+            opacity: 0.85;
             z-index: 20;
             cursor: grabbing;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
         }
 
-        .note-item-free .note-textarea-wrapper {
+        .note-item-free .note-content {
             flex: 1;
+            padding: 35px 10px 25px 10px;
             overflow: hidden;
             position: relative;
-            padding-top: 25px;
+            display: flex;
+            flex-direction: column;
         }
 
         .note-item-free textarea {
@@ -883,86 +886,105 @@
             font-size: 13px;
             outline: none;
             padding: 5px;
-            padding-right: 25px;
             overflow-y: auto;
             overflow-x: hidden;
+            flex: 1;
+            min-height: 40px;
+        }
+
+        .note-item-free textarea:focus {
+            outline: 2px solid var(--text-color, #ffffff);
+            outline-offset: 2px;
+            border-radius: 4px;
+        }
+
+        /* 4 кнопки заметки */
+        .note-item-free .note-btn {
+            position: absolute;
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            color: var(--text-color, #ffffff);
+            cursor: pointer;
+            font-size: 13px;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            z-index: 25;
+            opacity: 0.6;
+            backdrop-filter: blur(3px);
+        }
+
+        .note-item-free .note-btn:hover {
+            opacity: 1;
+            background: rgba(255, 255, 255, 0.15);
+            transform: scale(1.05);
+        }
+
+        .note-item-free .note-btn-edit {
+            top: 4px;
+            left: 4px;
+        }
+
+        .note-item-free .note-btn-delete {
+            top: 4px;
+            right: 4px;
+        }
+
+        .note-item-free .note-btn-color {
+            bottom: 4px;
+            left: 4px;
+            font-size: 14px;
+        }
+
+        .note-item-free .note-btn-resize {
+            bottom: 4px;
+            right: 4px;
+            font-size: 14px;
+            cursor: nw-resize;
+        }
+
+        .note-item-free .note-btn-resize:hover {
+            cursor: nw-resize;
+        }
+
+        .note-item-free .note-btn-resize::after {
+            content: '↘';
+            font-size: 14px;
+        }
+
+        /* Область перетаскивания - вся заметка кроме кнопок и текста */
+        .note-item-free .note-drag-area {
             position: absolute;
             top: 0;
             left: 0;
             right: 0;
             bottom: 0;
-            -webkit-user-select: text;
-            user-select: text;
+            cursor: grab;
+            z-index: 1;
         }
 
-        .note-item-free textarea:focus {
-            outline: 2px solid rgba(255, 255, 255, 0.2);
-            outline-offset: -2px;
+        .note-item-free.dragging .note-drag-area {
+            cursor: grabbing;
         }
 
-        .note-item-free .note-delete {
-            position: absolute;
-            top: 2px;
-            right: 5px;
-            background: none;
-            border: none;
-            color: var(--text-color, #ffffff);
-            cursor: pointer;
-            font-size: 14px;
-            opacity: 0.5;
-            padding: 2px 5px;
-            z-index: 25;
+        /* Текстовая область поверх drag-area */
+        .note-item-free .note-content {
+            position: relative;
+            z-index: 2;
         }
 
-        .note-item-free .note-delete:hover {
-            opacity: 1;
+        .note-item-free .note-content textarea {
+            position: relative;
+            z-index: 3;
         }
 
-        .note-item-free .note-color-btn {
-            position: absolute;
-            top: 2px;
-            left: 5px;
-            background: none;
-            border: none;
-            color: var(--text-color, #ffffff);
-            cursor: pointer;
-            font-size: 14px;
-            opacity: 0.5;
-            padding: 2px 5px;
-            z-index: 25;
-        }
-
-        .note-item-free .note-color-btn:hover {
-            opacity: 1;
-        }
-
-        .note-item-free .note-resize-handle {
-            position: absolute;
-            bottom: 0;
-            right: 0;
-            width: 20px;
-            height: 20px;
-            cursor: nw-resize;
-            opacity: 0.5;
-            z-index: 30;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 12px;
-            color: var(--text-color, #ffffff);
-            user-select: none;
-            touch-action: none;
-            background: transparent;
-        }
-
-        .note-item-free .note-resize-handle::after {
-            content: '↘';
-            opacity: 0.5;
-            font-size: 14px;
-        }
-
-        .note-item-free .note-resize-handle:hover::after {
-            opacity: 1;
+        /* Кнопки поверх всего */
+        .note-item-free .note-btn {
+            z-index: 10;
         }
 
         .notes-header {
@@ -1179,7 +1201,7 @@
 
         .is-mobile .note-item-free {
             min-width: 80px;
-            min-height: 40px;
+            min-height: 60px;
         }
 
         .is-mobile .note-item-free textarea {
@@ -1187,13 +1209,10 @@
             min-height: 30px;
         }
 
-        .is-mobile .note-item-free .note-resize-handle {
-            width: 30px;
-            height: 30px;
-        }
-
-        .is-mobile .note-item-free .note-resize-handle::after {
-            font-size: 18px;
+        .is-mobile .note-item-free .note-btn {
+            width: 28px;
+            height: 28px;
+            font-size: 14px;
         }
 
         /* Адаптивность */
@@ -1329,18 +1348,16 @@
             }
             .note-item-free {
                 min-width: 60px;
-                min-height: 35px;
+                min-height: 50px;
             }
             .note-item-free textarea {
                 font-size: 11px;
                 min-height: 25px;
             }
-            .note-item-free .note-resize-handle {
-                width: 25px;
-                height: 25px;
-            }
-            .note-item-free .note-resize-handle::after {
-                font-size: 14px;
+            .note-item-free .note-btn {
+                width: 22px;
+                height: 22px;
+                font-size: 11px;
             }
         }
 
@@ -1351,7 +1368,10 @@
             .draggable-row .drag-handle:active {
                 cursor: default;
             }
-            .note-item-free .note-resize-handle {
+            .note-item-free .note-btn-resize {
+                cursor: default;
+            }
+            .note-item-free .note-drag-area {
                 cursor: default;
             }
         }
@@ -1539,25 +1559,15 @@
         let isContextOpen = false;
         let isMobile = false;
         let piggyOverlayOpen = false;
-        let isTelegram = false;
 
         function checkMobile() {
-            // Проверка на Telegram Web App
-            isTelegram = !!(window.Telegram && window.Telegram.WebApp);
-            
             const isTouch = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
             const isMobileUA = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-            isMobile = isTouch || isMobileUA || window.innerWidth < 768 || isTelegram;
+            isMobile = isTouch || isMobileUA || window.innerWidth < 768;
             
             if (isMobile) {
                 document.getElementById('app').classList.add('is-mobile');
             }
-            
-            // Если это Telegram, добавляем специальный класс
-            if (isTelegram) {
-                document.getElementById('app').classList.add('is-telegram');
-            }
-            
             return isMobile;
         }
 
@@ -2454,53 +2464,36 @@
                     div.style.background = noteColor;
                     
                     div.innerHTML = `
-                        <button class="note-delete" onclick="deleteNote(${index})">✕</button>
-                        <button class="note-color-btn" onclick="changeNoteColor(${index})">✎</button>
-                        <div class="note-textarea-wrapper">
+                        <div class="note-drag-area"></div>
+                        <button class="note-btn note-btn-edit" onclick="editNoteText(${index})">✎</button>
+                        <button class="note-btn note-btn-delete" onclick="deleteNote(${index})">✕</button>
+                        <button class="note-btn note-btn-color" onclick="changeNoteColor(${index})">⚙</button>
+                        <div class="note-btn note-btn-resize" onmousedown="startNoteResize(event, ${index})"></div>
+                        <div class="note-content">
                             <textarea oninput="updateNoteText(${index}, this.value)" 
-                                      onfocus="handleTextareaFocus(event)"
-                                      onblur="handleTextareaBlur(event, ${index})"
-                                      style="min-height: ${(note.height || 120) - 20}px;">${note.text || ''}</textarea>
+                                      style="min-height: ${(note.height || 120) - 60}px;">${note.text || ''}</textarea>
                         </div>
-                        <div class="note-resize-handle" onmousedown="startNoteResize(event, ${index})"></div>
                     `;
                     
                     // Находим textarea внутри div
                     const textarea = div.querySelector('textarea');
                     if (textarea) {
-                        // Для Telegram Web App - используем click событие
-                        textarea.addEventListener('click', function(e) {
-                            e.stopPropagation();
-                            // Принудительно показываем клавиатуру в Telegram
-                            if (isTelegram) {
-                                this.focus();
-                                // Дополнительная задержка для Telegram
-                                setTimeout(() => {
-                                    this.focus();
-                                    this.setSelectionRange(this.value.length, this.value.length);
-                                }, 100);
-                            }
-                        });
-                        
-                        // Для обычных устройств
-                        textarea.addEventListener('touchstart', function(e) {
-                            e.stopPropagation();
-                            if (!isTelegram) {
-                                this.focus();
-                            }
-                        }, { passive: true });
-                        
+                        // Делаем textarea кликабельной для редактирования
                         textarea.addEventListener('mousedown', function(e) {
                             e.stopPropagation();
                         });
+                        textarea.addEventListener('touchstart', function(e) {
+                            e.stopPropagation();
+                        }, { passive: true });
                     }
                     
-                    // Перетаскивание заметок
+                    // Перетаскивание заметок через drag-area
+                    const dragArea = div.querySelector('.note-drag-area');
                     let isDragging = false;
                     let startX, startY, origX, origY;
                     
                     const startDrag = function(e) {
-                        if (e.target.closest('.note-delete') || e.target.closest('.note-color-btn') || e.target.closest('.note-resize-handle') || e.target.tagName === 'TEXTAREA') return;
+                        if (e.target.closest('.note-btn') || e.target.closest('textarea')) return;
                         
                         const maxZ = Math.max(20, ...data.notes.map(n => n.zIndex || 5));
                         data.notes[index].zIndex = maxZ + 1;
@@ -2546,16 +2539,16 @@
                         }
                     };
                     
-                    div.addEventListener('mousedown', startDrag);
+                    dragArea.addEventListener('mousedown', startDrag);
                     document.addEventListener('mousemove', moveDrag);
                     document.addEventListener('mouseup', endDrag);
                     
-                    div.addEventListener('touchstart', startDrag, { passive: true });
+                    dragArea.addEventListener('touchstart', startDrag, { passive: true });
                     document.addEventListener('touchmove', moveDrag, { passive: true });
                     document.addEventListener('touchend', endDrag, { passive: true });
                     
                     // Изменение размера заметки через правый нижний угол
-                    const resizeHandle = div.querySelector('.note-resize-handle');
+                    const resizeHandle = div.querySelector('.note-btn-resize');
                     if (resizeHandle) {
                         let isResizing = false;
                         let startResizeX, startResizeY, startWidth, startHeight;
@@ -2581,9 +2574,10 @@
                             const dx = clientX - startResizeX;
                             const dy = clientY - startResizeY;
                             
-                            const newWidth = Math.max(100, startWidth + dx);
-                            const newHeight = Math.max(50, startHeight + dy);
+                            const newWidth = Math.max(120, startWidth + dx);
+                            const newHeight = Math.max(80, startHeight + dy);
                             
+                            // Ограничиваем размеры внутри контейнера
                             const containerRect = container.getBoundingClientRect();
                             const maxW = containerRect.width - parseInt(div.style.left) - 10;
                             const maxH = containerRect.height - parseInt(div.style.top) - 10;
@@ -2599,6 +2593,7 @@
                                 data.notes[index].height = finalHeight;
                             }
                             
+                            // Обновляем размер внутреннего контейнера
                             const maxBottom2 = Math.max(0, ...data.notes.map(n => (n.y || 0) + (n.height || 120)));
                             const maxRight2 = Math.max(0, ...data.notes.map(n => (n.x || 0) + (n.width || 180)));
                             inner.style.height = Math.max(container.clientHeight, maxBottom2 + 50) + 'px';
@@ -2628,24 +2623,39 @@
             });
         }
 
-        function handleTextareaFocus(event) {
-            const textarea = event.target;
-            // Для Telegram - дополнительная обработка
-            if (isTelegram) {
-                setTimeout(() => {
+        function editNoteText(index) {
+            if (index >= data.notes.length) return;
+            const modal = document.getElementById('modal');
+            const content = document.getElementById('modalContent');
+            
+            content.innerHTML = `
+                <h2>✏️ Редактировать заметку</h2>
+                <label>Текст заметки:</label>
+                <textarea id="editNoteText" style="min-height:150px; resize:vertical; width:100%; padding:8px; background:rgba(255,255,255,0.08); color:#ffffff; border:1px solid #ffffff; border-radius:5px; font-size:14px;">${data.notes[index].text || ''}</textarea>
+                <div class="buttons">
+                    <button class="btn-primary" onclick="saveNoteText(${index})">💾 Сохранить</button>
+                    <button onclick="closeModal()">❌ Отмена</button>
+                </div>
+            `;
+            
+            modal.classList.add('active');
+            setTimeout(() => {
+                const textarea = document.getElementById('editNoteText');
+                if (textarea) {
                     textarea.focus();
-                    textarea.setSelectionRange(textarea.value.length, textarea.value.length);
-                }, 50);
-            }
+                    textarea.select();
+                }
+            }, 100);
         }
 
-        function handleTextareaBlur(event, index) {
-            // Сохраняем текст при потере фокуса
-            const textarea = event.target;
-            if (index < data.notes.length) {
-                data.notes[index].text = textarea.value;
-                saveData();
-            }
+        function saveNoteText(index) {
+            const text = document.getElementById('editNoteText').value;
+            data.notes[index].text = text;
+            saveData();
+            renderNotes();
+            closeModal();
+            playClickSound();
+            showNotification('✅ Текст заметки обновлен!');
         }
 
         function changeNoteColor(index) {
@@ -2749,6 +2759,10 @@
                 data.notes[index].text = text;
                 saveData();
             }
+        }
+
+        function startNoteResize(event, index) {
+            // Эта функция теперь обрабатывается внутри renderNotes
         }
 
         function setupNotePanelResize() {
