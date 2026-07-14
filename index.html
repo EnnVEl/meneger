@@ -885,8 +885,25 @@
             outline: none;
             padding: 4px;
             overflow-y: auto;
+            overflow-x: hidden;
             flex: 1;
             min-height: 40px;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .note-item-free .note-text::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .note-item-free .note-text::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 2px;
+        }
+
+        .note-item-free .note-text::-webkit-scrollbar-thumb {
+            background: var(--text-color, #ffffff);
+            border-radius: 2px;
+            opacity: 0.3;
         }
 
         .note-item-free .note-text:focus {
@@ -957,8 +974,11 @@
         }
 
         .is-mobile .note-item-free .note-text {
-            pointer-events: none;
-            user-select: none;
+            pointer-events: auto !important;
+            user-select: text !important;
+            -webkit-user-select: text !important;
+            cursor: text;
+            touch-action: pan-y;
         }
 
         .is-mobile .note-item-free .note-text:focus {
@@ -2573,9 +2593,13 @@
                                 this.select();
                             });
                         }
+                        // В мобильной версии разрешаем прокрутку текста
                         if (isMobile) {
-                            textarea.style.pointerEvents = 'none';
-                            textarea.style.userSelect = 'none';
+                            textarea.style.pointerEvents = 'auto';
+                            textarea.style.userSelect = 'text';
+                            textarea.style.webkitUserSelect = 'text';
+                            textarea.style.touchAction = 'pan-y';
+                            textarea.style.cursor = 'text';
                         }
                     }
                     
