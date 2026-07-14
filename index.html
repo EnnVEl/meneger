@@ -870,6 +870,7 @@
             overflow: hidden;
             position: relative;
             padding-top: 25px;
+            min-height: 50px;
         }
 
         .note-item-free textarea {
@@ -891,6 +892,14 @@
             left: 0;
             right: 0;
             bottom: 0;
+            -webkit-user-select: text;
+            user-select: text;
+            min-height: 50px;
+        }
+
+        .note-item-free textarea:focus {
+            outline: none;
+            background: rgba(255, 255, 255, 0.05);
         }
 
         .note-item-free .note-delete {
@@ -2446,16 +2455,21 @@
                         <div class="note-resize-handle" onmousedown="startNoteResize(event, ${index})"></div>
                     `;
                     
-                    // Находим textarea внутри div
+                    // Находим textarea и делаем её полностью функциональной
                     const textarea = div.querySelector('textarea');
                     if (textarea) {
-                        // Делаем textarea кликабельной для редактирования
+                        // Останавливаем всплытие событий, чтобы не мешать перетаскиванию
                         textarea.addEventListener('mousedown', function(e) {
                             e.stopPropagation();
                         });
                         textarea.addEventListener('touchstart', function(e) {
                             e.stopPropagation();
                         }, { passive: true });
+                        
+                        // Разрешаем ввод текста
+                        textarea.addEventListener('focus', function() {
+                            // Ничего не делаем, просто разрешаем фокус
+                        });
                     }
                     
                     // Перетаскивание заметок
@@ -2463,6 +2477,7 @@
                     let startX, startY, origX, origY;
                     
                     const startDrag = function(e) {
+                        // Игнорируем если клик по кнопкам или текстовому полю
                         if (e.target.closest('.note-delete') || e.target.closest('.note-color-btn') || e.target.closest('.note-resize-handle') || e.target.tagName === 'TEXTAREA') return;
                         
                         const maxZ = Math.max(20, ...data.notes.map(n => n.zIndex || 5));
