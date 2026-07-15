@@ -880,7 +880,7 @@
             border: none;
             color: var(--text-color, #ffffff);
             resize: none;
-            font-family: inherit;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             font-size: 14px;
             outline: none;
             padding: 4px;
@@ -889,6 +889,13 @@
             flex: 1;
             min-height: 40px;
             -webkit-overflow-scrolling: touch;
+            line-height: 1.6;
+            word-break: break-word;
+            word-wrap: break-word;
+            white-space: pre-wrap;
+            hyphens: auto;
+            -webkit-hyphens: auto;
+            -ms-hyphens: auto;
         }
 
         .note-item-free .note-text::-webkit-scrollbar {
@@ -974,11 +981,11 @@
         }
 
         .is-mobile .note-item-free .note-text {
-            pointer-events: auto !important;
-            user-select: text !important;
-            -webkit-user-select: text !important;
-            cursor: text;
-            touch-action: pan-y;
+            pointer-events: none !important;
+            user-select: none !important;
+            -webkit-user-select: none !important;
+            cursor: default;
+            touch-action: none;
         }
 
         .is-mobile .note-item-free .note-text:focus {
@@ -2593,13 +2600,13 @@
                                 this.select();
                             });
                         }
-                        // В мобильной версии разрешаем прокрутку текста
+                        // В мобильной версии блокируем редактирование и касания
                         if (isMobile) {
-                            textarea.style.pointerEvents = 'auto';
-                            textarea.style.userSelect = 'text';
-                            textarea.style.webkitUserSelect = 'text';
-                            textarea.style.touchAction = 'pan-y';
-                            textarea.style.cursor = 'text';
+                            textarea.style.pointerEvents = 'none';
+                            textarea.style.userSelect = 'none';
+                            textarea.style.webkitUserSelect = 'none';
+                            textarea.style.cursor = 'default';
+                            textarea.style.touchAction = 'none';
                         }
                     }
                     
@@ -2728,6 +2735,13 @@
                             const maxRight2 = Math.max(0, ...data.notes.map(n => (n.x || 0) + (n.width || 180)));
                             inner.style.height = Math.max(container.clientHeight, maxBottom2 + 50) + 'px';
                             inner.style.width = Math.max(container.clientWidth, maxRight2 + 50) + 'px';
+                            
+                            // Обновляем textarea внутри заметки
+                            const textarea2 = div.querySelector('.note-text');
+                            if (textarea2) {
+                                textarea2.style.height = '100%';
+                                textarea2.style.width = '100%';
+                            }
                         };
                         
                         const endResize = function() {
@@ -2764,7 +2778,7 @@
             content.innerHTML = `
                 <h2>✏️ Редактировать заметку</h2>
                 <label>Текст заметки:</label>
-                <textarea id="noteTextEdit" rows="6" style="width:100%; padding:8px; background:rgba(255,255,255,0.08); color:#ffffff; border:1px solid #ffffff; border-radius:5px; font-size:14px;">${currentText}</textarea>
+                <textarea id="noteTextEdit" rows="6" style="width:100%; padding:8px; background:rgba(255,255,255,0.08); color:#ffffff; border:1px solid #ffffff; border-radius:5px; font-size:14px; line-height:1.6; word-break:break-word; font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">${currentText}</textarea>
                 <div class="buttons">
                     <button class="btn-primary" onclick="saveNoteTextMobile(${index})">💾 Сохранить</button>
                     <button onclick="closeModal()">❌ Отмена</button>
