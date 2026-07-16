@@ -850,6 +850,7 @@
             z-index: 5;
             display: flex;
             flex-direction: column;
+            overflow: hidden;
         }
 
         .note-item-free:hover {
@@ -883,7 +884,7 @@
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             font-size: 14px;
             outline: none;
-            padding: 4px;
+            padding: 4px 8px 4px 4px;
             overflow-y: auto;
             overflow-x: hidden;
             flex: 1;
@@ -896,6 +897,7 @@
             hyphens: auto;
             -webkit-hyphens: auto;
             -ms-hyphens: auto;
+            scroll-behavior: smooth;
         }
 
         .note-item-free .note-text::-webkit-scrollbar {
@@ -981,11 +983,12 @@
         }
 
         .is-mobile .note-item-free .note-text {
-            pointer-events: none !important;
+            pointer-events: auto !important;
             user-select: none !important;
             -webkit-user-select: none !important;
             cursor: default;
-            touch-action: none;
+            touch-action: pan-y;
+            -webkit-touch-callout: none;
         }
 
         .is-mobile .note-item-free .note-text:focus {
@@ -2600,13 +2603,24 @@
                                 this.select();
                             });
                         }
-                        // В мобильной версии блокируем редактирование и касания
+                        // В мобильной версии разрешаем прокрутку, но запрещаем редактирование
                         if (isMobile) {
-                            textarea.style.pointerEvents = 'none';
+                            textarea.style.pointerEvents = 'auto';
                             textarea.style.userSelect = 'none';
                             textarea.style.webkitUserSelect = 'none';
                             textarea.style.cursor = 'default';
-                            textarea.style.touchAction = 'none';
+                            textarea.style.touchAction = 'pan-y';
+                            // Блокируем все события, кроме касаний для прокрутки
+                            textarea.addEventListener('touchstart', function(e) {
+                                // Разрешаем касания для прокрутки
+                            }, { passive: true });
+                            textarea.addEventListener('touchmove', function(e) {
+                                // Разрешаем касания для прокрутки
+                            }, { passive: true });
+                            // Запрещаем фокус на поле в мобильной версии
+                            textarea.addEventListener('focus', function(e) {
+                                this.blur();
+                            });
                         }
                     }
                     
