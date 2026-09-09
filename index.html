@@ -544,6 +544,16 @@
             opacity: 0.8;
         }
 
+        .modal-content .buttons .btn-danger {
+            border-color: #ff4444;
+            color: #ff4444 !important;
+        }
+
+        .modal-content .buttons .btn-danger:hover {
+            background: #ff4444;
+            color: #ffffff !important;
+        }
+
         .modal-content .buttons button:hover {
             opacity: 0.8;
         }
@@ -700,7 +710,7 @@
             width: 100%;
             padding: 12px;
             background: #8B0000;
-            color: white;
+            color: white !important;
             border: none;
             border-radius: 5px;
             font-size: 16px;
@@ -710,6 +720,93 @@
         }
 
         .reset-btn:hover {
+            opacity: 0.8;
+        }
+
+        .file-input-wrapper {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .file-input-wrapper input[type="file"] {
+            flex: 1;
+            min-width: 150px;
+            padding: 8px;
+            background: rgba(255, 255, 255, 0.08);
+            color: #ffffff !important;
+            border: 1px solid #ffffff;
+            border-radius: 5px;
+            font-size: 13px;
+        }
+
+        .file-input-wrapper input[type="file"]::-webkit-file-upload-button {
+            padding: 5px 15px;
+            background: rgba(255, 255, 255, 0.2);
+            color: #ffffff;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+
+        .file-input-wrapper input[type="file"]::-webkit-file-upload-button:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .file-input-wrapper button {
+            padding: 8px 15px;
+            border: 1px solid #ffffff;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: rgba(255, 255, 255, 0.1);
+            color: #ffffff !important;
+            font-size: 13px;
+            white-space: nowrap;
+        }
+
+        .file-input-wrapper button:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .file-input-wrapper button.btn-primary {
+            background: #ffffff;
+            color: #2b2b2b !important;
+        }
+
+        .music-list {
+            margin: 10px 0;
+            max-height: 150px;
+            overflow-y: auto;
+        }
+
+        .music-list .music-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 5px 10px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            font-size: 13px;
+        }
+
+        .music-list .music-item .music-name {
+            flex: 1;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .music-list .music-item .music-remove {
+            background: none;
+            border: none;
+            color: #ff4444;
+            cursor: pointer;
+            font-size: 16px;
+            padding: 0 5px;
+        }
+
+        .music-list .music-item .music-remove:hover {
             opacity: 0.8;
         }
 
@@ -3107,7 +3204,7 @@
             playClickSound();
         }
 
-        // ===== НАСТРОЙКИ =====
+        // ===== НАСТРОЙКИ С АВТОСОХРАНЕНИЕМ =====
         function openSettings() {
             const modal = document.getElementById('modal');
             const content = document.getElementById('modalContent');
@@ -3175,7 +3272,7 @@
                 <div class="settings-group">
                     <label>Громкость музыки:</label>
                     <div class="slider-container">
-                        <input type="range" id="musicVolume" min="0" max="100" value="${data.settings.musicVolume}">
+                        <input type="range" id="musicVolume" min="0" max="100" value="${data.settings.musicVolume}" oninput="updateMusicVolumeSlider(this.value)">
                         <span id="volumeDisplay">${data.settings.musicVolume}%</span>
                     </div>
                 </div>
@@ -3192,45 +3289,24 @@
                 </div>
                 
                 <div class="checkbox-container">
-                    <input type="checkbox" id="soundEffects" ${data.settings.soundEffects ? 'checked' : ''}>
+                    <input type="checkbox" id="soundEffects" ${data.settings.soundEffects ? 'checked' : ''} onchange="updateSoundEffects(this.checked)">
                     <label for="soundEffects">🔊 Звуковые эффекты</label>
                 </div>
                 
-                <div class="backup-section">
-                    <h3>💾 Резервное копирование</h3>
-                    <div class="backup-info">Сохраните все данные в файл или восстановите из файла</div>
-                    <div class="settings-btn-group">
-                        <button class="btn-primary" onclick="exportBackup()">📤 Экспорт</button>
-                        <button onclick="document.getElementById('backupFileInput').click()">📥 Импорт</button>
-                        <input type="file" id="backupFileInput" accept=".json" style="display:none" onchange="importBackup(this)">
-                    </div>
-                </div>
-                
                 <button class="reset-btn" onclick="resetAll()">🔄 Сбросить все настройки и данные</button>
-                
-                <div class="buttons">
-                    <button class="btn-primary" onclick="saveSettings()">💾 Сохранить</button>
-                    <button onclick="closeModal()">❌ Закрыть</button>
-                </div>
             `;
-            
-            const volumeSlider = document.getElementById('musicVolume');
-            if (volumeSlider) {
-                volumeSlider.addEventListener('input', function() {
-                    document.getElementById('volumeDisplay').textContent = this.value + '%';
-                    data.settings.musicVolume = parseInt(this.value);
-                    updateMusicVolume();
-                });
-            }
             
             modal.classList.add('active');
         }
 
-        // ===== ФУНКЦИИ НАСТРОЕК =====
+        // ===== ФУНКЦИИ АВТОСОХРАНЕНИЯ НАСТРОЕК =====
+
         function updateBgColorFromPicker(value) {
             document.getElementById('bgColorText').value = value;
             data.settings.bgColor = value;
             applySettings();
+            saveData();
+            showNotification('✅ Цвет фона обновлен!');
         }
 
         function updateBgColorFromText(value) {
@@ -3238,6 +3314,8 @@
                 document.getElementById('bgColor').value = value;
                 data.settings.bgColor = value;
                 applySettings();
+                saveData();
+                showNotification('✅ Цвет фона обновлен!');
             }
         }
 
@@ -3245,6 +3323,8 @@
             document.getElementById('textColorText').value = value;
             data.settings.textColor = value;
             applySettings();
+            saveData();
+            showNotification('✅ Цвет текста обновлен!');
         }
 
         function updateTextColorFromText(value) {
@@ -3252,6 +3332,8 @@
                 document.getElementById('textColor').value = value;
                 data.settings.textColor = value;
                 applySettings();
+                saveData();
+                showNotification('✅ Цвет текста обновлен!');
             }
         }
 
@@ -3262,7 +3344,20 @@
                     input.value = value;
                     data.settings.gradientColors[index] = value;
                     applySettings();
+                    saveData();
+                    showNotification('✅ Цвет градиента обновлен!');
                 }
+            }
+        }
+
+        function updateGradientColor(index, color) {
+            if (data.settings.gradientColors && index < data.settings.gradientColors.length) {
+                data.settings.gradientColors[index] = color;
+                const textInput = document.querySelectorAll('#gradientColors .color-input-wrapper input[type="text"]')[index];
+                if (textInput) textInput.value = color;
+                applySettings();
+                saveData();
+                showNotification('✅ Цвет градиента обновлен!');
             }
         }
 
@@ -3271,6 +3366,7 @@
             data.settings.gradientColors.push('#3c3c3c');
             saveData();
             openSettings();
+            showNotification('✅ Цвет добавлен в градиент!');
         }
 
         function removeGradientColor(index) {
@@ -3278,6 +3374,7 @@
                 data.settings.gradientColors.splice(index, 1);
                 saveData();
                 openSettings();
+                showNotification('✅ Цвет удален из градиента!');
             }
         }
 
@@ -3289,21 +3386,27 @@
             data.settings.gradientColors[newIndex] = temp;
             saveData();
             openSettings();
+            showNotification('✅ Порядок цветов изменен!');
         }
 
         function clearGradient() {
             data.settings.gradientColors = [];
             saveData();
             openSettings();
+            showNotification('✅ Градиент очищен!');
         }
 
-        function updateGradientColor(index, color) {
-            if (data.settings.gradientColors && index < data.settings.gradientColors.length) {
-                data.settings.gradientColors[index] = color;
-                const textInput = document.querySelectorAll('#gradientColors .color-input-wrapper input[type="text"]')[index];
-                if (textInput) textInput.value = color;
-                applySettings();
-            }
+        function updateMusicVolumeSlider(value) {
+            document.getElementById('volumeDisplay').textContent = value + '%';
+            data.settings.musicVolume = parseInt(value);
+            updateMusicVolume();
+            saveData();
+        }
+
+        function updateSoundEffects(checked) {
+            data.settings.soundEffects = checked;
+            saveData();
+            showNotification(checked ? '✅ Звуковые эффекты включены!' : '🔇 Звуковые эффекты выключены!');
         }
 
         function loadBackgroundImage(input) {
@@ -3386,153 +3489,6 @@
             loadMusicFiles();
             
             openSettings();
-        }
-
-        function saveSettings() {
-            data.settings.bgColor = document.getElementById('bgColor').value;
-            data.settings.textColor = document.getElementById('textColor').value;
-            
-            const colorInputs = document.querySelectorAll('#gradientColors input[type="color"]');
-            if (colorInputs.length > 0) {
-                data.settings.gradientColors = Array.from(colorInputs).map(input => input.value);
-            } else {
-                data.settings.gradientColors = [];
-            }
-            
-            data.settings.musicVolume = parseInt(document.getElementById('musicVolume').value);
-            data.settings.soundEffects = document.getElementById('soundEffects').checked;
-            
-            applySettings();
-            saveData();
-            closeModal();
-            playClickSound();
-            showNotification('✅ Настройки сохранены!');
-        }
-
-        // ===== РЕЗЕРВНОЕ КОПИРОВАНИЕ =====
-        function exportBackup() {
-            try {
-                const backupData = {
-                    tasks: data.tasks,
-                    completed: data.completed,
-                    store: data.store,
-                    tempTasks: data.tempTasks,
-                    notes: data.notes,
-                    balance: data.balance,
-                    piggyBalance: data.piggyBalance,
-                    settings: {
-                        bgColor: data.settings.bgColor,
-                        textColor: data.settings.textColor,
-                        gradientColors: data.settings.gradientColors,
-                        bgImage: data.settings.bgImage,
-                        musicVolume: data.settings.musicVolume,
-                        soundEffects: data.settings.soundEffects,
-                        customMusic: data.settings.customMusic ? data.settings.customMusic.map(track => ({
-                            name: track.name,
-                        })) : []
-                    }
-                };
-                
-                const exportData = {
-                    version: '1.0',
-                    exportDate: new Date().toISOString(),
-                    data: backupData
-                };
-                
-                const json = JSON.stringify(exportData, null, 2);
-                const blob = new Blob([json], { type: 'application/json' });
-                const url = URL.createObjectURL(blob);
-                
-                const link = document.createElement('a');
-                link.href = url;
-                link.download = `task_manager_backup_${new Date().toISOString().slice(0,10)}.json`;
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-                URL.revokeObjectURL(url);
-                
-                showNotification('✅ Резервная копия создана!');
-                playClickSound();
-            } catch (e) {
-                showNotification('❌ Ошибка при создании резервной копии: ' + e.message);
-                console.error('Backup error:', e);
-            }
-        }
-
-        function importBackup(input) {
-            const file = input.files[0];
-            if (!file) {
-                showNotification('❌ Выберите файл резервной копии!');
-                return;
-            }
-            
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                try {
-                    const json = JSON.parse(e.target.result);
-                    
-                    if (!json.data || !json.data.tasks || !json.data.settings) {
-                        showNotification('❌ Неверный формат файла!');
-                        return;
-                    }
-                    
-                    if (json.version && json.version !== '1.0') {
-                        if (!confirm(`Версия файла (${json.version}) отличается от текущей. Продолжить?`)) {
-                            return;
-                        }
-                    }
-                    
-                    if (!confirm('Восстановить данные из резервной копии? Текущие данные будут заменены!')) {
-                        return;
-                    }
-                    
-                    const backupData = json.data;
-                    data.tasks = backupData.tasks || [];
-                    data.completed = backupData.completed || [];
-                    data.store = backupData.store || [];
-                    data.tempTasks = backupData.tempTasks || [];
-                    data.notes = backupData.notes || [];
-                    data.balance = backupData.balance || 0;
-                    data.piggyBalance = backupData.piggyBalance || 0;
-                    
-                    if (backupData.settings) {
-                        data.settings.bgColor = backupData.settings.bgColor || '#2b2b2b';
-                        data.settings.textColor = backupData.settings.textColor || '#ffffff';
-                        data.settings.gradientColors = backupData.settings.gradientColors || ['#2b2b2b', '#1a1a2e'];
-                        data.settings.bgImage = backupData.settings.bgImage || null;
-                        data.settings.musicVolume = backupData.settings.musicVolume || 100;
-                        data.settings.soundEffects = backupData.settings.soundEffects !== undefined ? backupData.settings.soundEffects : true;
-                        if (backupData.settings.customMusic) {
-                            data.settings.customMusic = data.settings.customMusic || [];
-                        }
-                    }
-                    
-                    saveData();
-                    applySettings();
-                    updateAll();
-                    updateBalance();
-                    updatePiggyBalance();
-                    
-                    musicFiles = [];
-                    musicLoaded = false;
-                    loadMusicFiles();
-                    
-                    closeModal();
-                    showNotification('✅ Данные восстановлены из резервной копии!');
-                    playClickSound();
-                    
-                } catch (err) {
-                    showNotification('❌ Ошибка при чтении файла: ' + err.message);
-                    console.error('Import error:', err);
-                }
-            };
-            
-            reader.onerror = function() {
-                showNotification('❌ Ошибка при чтении файла!');
-            };
-            
-            reader.readAsText(file);
-            input.value = '';
         }
 
         function resetAll() {
@@ -3627,7 +3583,7 @@
             clearTimeout(notification.timeout);
             notification.timeout = setTimeout(() => {
                 notification.classList.remove('show');
-            }, 4000);
+            }, 3000);
         }
 
         function closeModal() {
@@ -3653,6 +3609,11 @@
                 if (e.target === this) closePiggyOverlay();
             });
             
+            // Закрытие настроек по клику вне модального окна
+            document.getElementById('modal').addEventListener('click', function(e) {
+                if (e.target === this) closeModal();
+            });
+            
             setTimeout(() => {
                 loadMusicFiles();
             }, 500);
@@ -3661,10 +3622,6 @@
                 if (!e.target.closest('.context-menu')) {
                     closeContextMenu();
                 }
-            });
-            
-            document.getElementById('modal').addEventListener('click', function(e) {
-                if (e.target === this) closeModal();
             });
             
             window.addEventListener('resize', function() {
