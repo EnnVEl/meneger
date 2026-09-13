@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Менеджер заданий</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         * {
             margin: 0;
@@ -914,7 +915,6 @@
             background: rgba(255, 255, 255, 0.1);
         }
 
-        /* ЗАМЕТКИ */
         .notes-container {
             position: relative;
             flex: 1;
@@ -1017,7 +1017,6 @@
             border-radius: 4px;
         }
 
-        /* Кнопки заметок */
         .note-item-free .note-btn {
             position: absolute;
             background: none;
@@ -1206,7 +1205,6 @@
             flex-shrink: 0;
         }
 
-        /* Копилка - overlay */
         .piggy-overlay {
             display: none;
             position: fixed;
@@ -1306,7 +1304,6 @@
             opacity: 1;
         }
 
-        /* Мобильная версия */
         .is-mobile .notes-panel {
             display: none !important;
         }
@@ -1707,6 +1704,10 @@
     </div>
 
     <script>
+        // ===== TELEGRAM CLOUD STORAGE (метод синхронизации) =====
+        const tg = window.Telegram?.WebApp;
+        const hasCloudStorage = !!(tg && tg.CloudStorage);
+
         // ===== ДАННЫЕ =====
         let data = {
             tasks: [],
@@ -1882,48 +1883,88 @@
             }
         }
 
-        // ===== СОХРАНЕНИЕ =====
+        // ===== СОХРАНЕНИЕ (Telegram CloudStorage + fallback на localStorage) =====
+        const STORAGE_KEY = 'taskManagerData';
+
         function saveData() {
-            try {
-                localStorage.setItem('taskManagerData', JSON.stringify(data));
-            } catch (e) {}
+            const json = JSON.stringify(data);
+
+            if (hasCloudStorage) {
+                try {
+                    tg.CloudStorage.setItem(STORAGE_KEY, json, (err) => {
+                        if (err) {
+                            console.warn('CloudStorage save error, fallback to localStorage:', err);
+                            try { localStorage.setItem(STORAGE_KEY, json); } catch (e) {}
+                        }
+                    });
+                } catch (e) {
+                    try { localStorage.setItem(STORAGE_KEY, json); } catch (e2) {}
+                }
+            } else {
+                try {
+                    localStorage.setItem(STORAGE_KEY, json);
+                } catch (e) {}
+            }
         }
 
-        function loadData() {
+        function applyLoadedData(parsed) {
+            data = parsed;
+            if (!data.tempTasks) data.tempTasks = [];
+            if (!data.notes) data.notes = [];
+            if (!data.piggyBalance) data.piggyBalance = 0;
+            if (!data.settings) {
+                data.settings = {
+                    bgColor: '#2b2b2b',
+                    textColor: '#ffffff',
+                    gradientColors: ['#2b2b2b', '#1a1a2e'],
+                    bgImage: null,
+                    musicVolume: 100,
+                    soundEffects: true,
+                    customMusic: []
+                };
+            }
+            if (!data.settings.gradientColors) {
+                data.settings.gradientColors = ['#2b2b2b', '#1a1a2e'];
+            }
+            if (!data.settings.musicVolume) {
+                data.settings.musicVolume = 100;
+            }
+            if (!data.settings.customMusic) {
+                data.settings.customMusic = [];
+            }
+        }
+
+        function loadData(callback) {
+            if (hasCloudStorage) {
+                tg.CloudStorage.getItem(STORAGE_KEY, (err, value) => {
+                    if (err || !value) {
+                        // Пробуем localStorage как fallback
+                        tryLoadFromLocal(callback);
+                    } else {
+                        try {
+                            const parsed = JSON.parse(value);
+                            applyLoadedData(parsed);
+                        } catch (e) {
+                            tryLoadFromLocal(callback);
+                            return;
+                        }
+                        if (callback) callback();
+                    }
+                });
+            } else {
+                tryLoadFromLocal(callback);
+            }
+        }
+
+        function tryLoadFromLocal(callback) {
             try {
-                const saved = localStorage.getItem('taskManagerData');
+                const saved = localStorage.getItem(STORAGE_KEY);
                 if (saved) {
                     const parsed = JSON.parse(saved);
-                    data = parsed;
-                    if (!data.tempTasks) data.tempTasks = [];
-                    if (!data.notes) data.notes = [];
-                    if (!data.piggyBalance) data.piggyBalance = 0;
-                    if (!data.settings) {
-                        data.settings = {
-                            bgColor: '#2b2b2b',
-                            textColor: '#ffffff',
-                            gradientColors: ['#2b2b2b', '#1a1a2e'],
-                            bgImage: null,
-                            musicVolume: 100,
-                            soundEffects: true,
-                            customMusic: []
-                        };
-                    }
-                    if (!data.settings.gradientColors) {
-                        data.settings.gradientColors = ['#2b2b2b', '#1a1a2e'];
-                    }
-                    if (!data.settings.musicVolume) {
-                        data.settings.musicVolume = 100;
-                    }
-                    if (!data.settings.customMusic) {
-                        data.settings.customMusic = [];
-                    }
-                    applySettings();
-                    updateAll();
-                    updateBalance();
-                    updatePiggyBalance();
+                    applyLoadedData(parsed);
                 }
             } catch (e) {}
+            if (callback) callback();
         }
 
         // ===== ПРИМЕНЕНИЕ НАСТРОЕК =====
@@ -3598,39 +3639,41 @@
         // ===== ИНИЦИАЛИЗАЦИЯ =====
         function init() {
             checkMobile();
-            loadData();
-            applySettings();
-            updateAll();
-            updateBalance();
-            updatePiggyBalance();
-            setupNotePanelResize();
-            
-            document.getElementById('piggyOverlay').addEventListener('click', function(e) {
-                if (e.target === this) closePiggyOverlay();
-            });
-            
-            // Закрытие настроек по клику вне модального окна
-            document.getElementById('modal').addEventListener('click', function(e) {
-                if (e.target === this) closeModal();
-            });
-            
-            setTimeout(() => {
-                loadMusicFiles();
-            }, 500);
-            
-            document.addEventListener('click', function(e) {
-                if (!e.target.closest('.context-menu')) {
-                    closeContextMenu();
-                }
-            });
-            
-            window.addEventListener('resize', function() {
-                const wasMobile = isMobile;
-                checkMobile();
-                if (wasMobile !== isMobile) {
-                    updateAll();
-                }
-                renderNotes();
+
+            // Загрузка данных (асинхронная, т.к. CloudStorage работает через callback)
+            loadData(function() {
+                applySettings();
+                updateAll();
+                updateBalance();
+                updatePiggyBalance();
+                setupNotePanelResize();
+                
+                document.getElementById('piggyOverlay').addEventListener('click', function(e) {
+                    if (e.target === this) closePiggyOverlay();
+                });
+                
+                document.getElementById('modal').addEventListener('click', function(e) {
+                    if (e.target === this) closeModal();
+                });
+                
+                setTimeout(() => {
+                    loadMusicFiles();
+                }, 500);
+                
+                document.addEventListener('click', function(e) {
+                    if (!e.target.closest('.context-menu')) {
+                        closeContextMenu();
+                    }
+                });
+                
+                window.addEventListener('resize', function() {
+                    const wasMobile = isMobile;
+                    checkMobile();
+                    if (wasMobile !== isMobile) {
+                        updateAll();
+                    }
+                    renderNotes();
+                });
             });
         }
 
