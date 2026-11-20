@@ -472,7 +472,7 @@
             align-items: center;
             justify-content: space-between;
             gap: 10px;
-            margin-bottom: 8px;
+            margin-bottom: 15px;
         }
 
         .modal-header h2 {
@@ -486,17 +486,6 @@
             display: flex;
             align-items: center;
             gap: 6px;
-        }
-
-        .sync-status-box {
-            font-size: 12px;
-            opacity: 0.8;
-            background: rgba(255, 255, 255, 0.06);
-            border: 1px solid rgba(255, 255, 255, 0.15);
-            border-radius: 6px;
-            padding: 6px 10px;
-            margin-bottom: 12px;
-            line-height: 1.4;
         }
 
         .modal-icon-btn {
@@ -1193,14 +1182,6 @@
             user-select: none;
         }
 
-        .piggy-overlay .piggy-icon:hover {
-            transform: scale(1.1);
-        }
-
-        .piggy-overlay .piggy-icon:active {
-            transform: scale(0.95);
-        }
-
         .piggy-overlay .piggy-balance {
             font-size: 28px;
             font-weight: bold;
@@ -1476,6 +1457,7 @@
     </div>
 
     <script>
+        // ===== TELEGRAM WEBAPP & CLOUD STORAGE =====
         const tg = window.Telegram?.WebApp;
         if (tg) {
             try {
@@ -1485,13 +1467,7 @@
         }
         const hasCloudStorage = !!(tg && tg.CloudStorage);
 
-        let syncStatusText = hasCloudStorage ? 'Облако Telegram доступно' : 'Открыто вне Telegram (только локально)';
-
-        function updateSyncStatusUI() {
-            const box = document.getElementById('syncStatusBox');
-            if (box) box.textContent = syncStatusText;
-        }
-
+        // ===== ДАННЫЕ =====
         function createDefaultData() {
             return {
                 tasks: [],
@@ -1540,6 +1516,7 @@
             return list;
         }
 
+        // ===== ОПРЕДЕЛЕНИЕ МОБИЛЬНОГО УСТРОЙСТВА =====
         function checkMobile() {
             const isTouch = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
             const isMobileUA = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
@@ -1556,6 +1533,7 @@
             return isMobileDevice;
         }
 
+        // ===== ЗВУК =====
         function playClickSound() {
             if (!data.settings.soundEffects) return;
             try {
@@ -1574,6 +1552,7 @@
             } catch (e) {}
         }
 
+        // ===== МУЗЫКА =====
         function loadMusicFiles() {
             musicFiles = [];
             
@@ -1679,9 +1658,10 @@
             }
         }
 
-        const STORAGE_KEY = 'tm_v2';
+        // ===== СИНХРОНИЗАЦИЯ МЕЖДУ УСТРОЙСТВАМИ (CloudStorage + localStorage) =====
+        const STORAGE_KEY = 'taskManagerData';
         const MEDIA_KEY = 'taskManagerMedia';
-        const CHUNK_SIZE = 3500;
+        const CHUNK_SIZE = 3800;
         const MAX_CHUNKS = 20;
 
         function buildCloudPayload() {
@@ -1727,30 +1707,6 @@
         let lastSavedChunkCount = 0;
         let isSyncing = false;
 
-        function setCloudItemPromise(key, val) {
-            return new Promise((resolve) => {
-                try {
-                    tg.CloudStorage.setItem(key, val, (err, ok) => {
-                        resolve({ err, ok });
-                    });
-                } catch (e) {
-                    resolve({ err: e, ok: false });
-                }
-            });
-        }
-
-        function getCloudItemPromise(key) {
-            return new Promise((resolve) => {
-                try {
-                    tg.CloudStorage.getItem(key, (err, val) => {
-                        resolve({ err, val });
-                    });
-                } catch (e) {
-                    resolve({ err: e, val: null });
-                }
-            });
-        }
-
         function saveData(immediate = false) {
             data.updatedAt = Date.now();
             ensureTaskIds(data.tasks);
@@ -1769,7 +1725,7 @@
 
             if (!hasCloudStorage) return;
 
-            const pushToCloud = async () => {
+            const pushToCloud = () => {
                 try {
                     const payload = buildCloudPayload();
                     const chunks = [];
@@ -1777,45 +1733,44 @@
                         chunks.push(payload.slice(i, i + CHUNK_SIZE));
                     }
 
-                    let hadError = false;
-                    for (let i = 0; i < chunks.length; i++) {
-                        const res = await setCloudItemPromise(`${STORAGE_KEY}_c${i}`, chunks[i]);
-                        if (res.err) {
-                            hadError = true;
-                            break;
-                        }
-                    }
+                    const metaStr = JSON.stringify({
+                        chunks: chunks.length,
+                        updatedAt: data.updatedAt
+                    });
 
-                    if (!hadError) {
-                        const metaStr = JSON.stringify({
-                            chunks: chunks.length,
-                            updatedAt: data.updatedAt
+                    // Пишем чанки первыми, и только после успешной записи всех чанков обновляем _meta
+                    let written = 0;
+                    const writeChunksAndMeta = () => {
+                        if (chunks.length === 0) {
+                            tg.CloudStorage.setItem(`${STORAGE_KEY}_meta`, metaStr);
+                            return;
+                        }
+                        chunks.forEach((chunk, idx) => {
+                            tg.CloudStorage.setItem(`${STORAGE_KEY}_${idx}`, chunk, (err) => {
+                                if (!err) {
+                                    written++;
+                                    if (written === chunks.length) {
+                                        tg.CloudStorage.setItem(`${STORAGE_KEY}_meta`, metaStr);
+                                    }
+                                }
+                            });
                         });
-                        const metaRes = await setCloudItemPromise(`${STORAGE_KEY}_meta`, metaStr);
-                        if (metaRes.err) {
-                            hadError = true;
-                        }
-                    }
+                    };
 
-                    if (!hadError && lastSavedChunkCount > chunks.length) {
+                    writeChunksAndMeta();
+
+                    if (lastSavedChunkCount > chunks.length) {
                         const keysToRemove = [];
                         for (let i = chunks.length; i < lastSavedChunkCount; i++) {
-                            keysToRemove.push(`${STORAGE_KEY}_c${i}`);
+                            keysToRemove.push(`${STORAGE_KEY}_${i}`);
                         }
-                        if (keysToRemove.length > 0 && tg.CloudStorage.removeItems) {
+                        if (keysToRemove.length > 0) {
                             tg.CloudStorage.removeItems(keysToRemove);
                         }
                     }
                     lastSavedChunkCount = chunks.length;
-
-                    const timeStr = new Date().toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-                    syncStatusText = hadError
-                        ? `Ошибка записи в облако (${timeStr})`
-                        : `Облако: сохранено в ${timeStr} (${chunks.length} ч., ${payload.length} Б)`;
-                    updateSyncStatusUI();
                 } catch (e) {
-                    syncStatusText = `Ошибка синхронизации: ${e?.message || e}`;
-                    updateSyncStatusUI();
+                    console.warn('CloudStorage save error:', e);
                 }
             };
 
@@ -1850,27 +1805,33 @@
             return merged;
         }
 
+        // Умное объединение данных двух устройств, чтобы изменения с другого устройства не терялись
         function mergeDeviceStates(primary, secondary) {
             const p = normalizeObject(primary);
             const s = normalizeObject(secondary);
 
+            // Если одно из состояний пустое, берём другое
             const pEmpty = p.tasks.length === 0 && p.completed.length === 0 && p.store.length === 0 && p.tempTasks.length === 0 && p.notes.length === 0 && p.balance === 0 && p.piggyBalance === 0;
             const sEmpty = s.tasks.length === 0 && s.completed.length === 0 && s.store.length === 0 && s.tempTasks.length === 0 && s.notes.length === 0 && s.balance === 0 && s.piggyBalance === 0;
             if (pEmpty && !sEmpty) return s;
             if (sEmpty && !pEmpty) return p;
 
+            // Основным источником берём более свежее состояние по updatedAt
             const newer = p.updatedAt >= s.updatedAt ? p : s;
             const older = p.updatedAt >= s.updatedAt ? s : p;
 
+            // Объединяем завершённые задания по uid (чтобы выполненные на другом устройстве не пропадали)
             const completedMap = new Map();
             older.completed.forEach(item => completedMap.set(item.uid, item));
             newer.completed.forEach(item => completedMap.set(item.uid, item));
             const mergedCompleted = Array.from(completedMap.values());
             const completedUids = new Set(mergedCompleted.map(i => i.uid));
 
+            // Убираем из активных те задачи, которые уже попали в завершённые
             const mergedTasks = newer.tasks.filter(t => !completedUids.has(t.uid));
             const mergedTemp = newer.tempTasks.filter(t => !completedUids.has(t.uid));
 
+            // Объединяем магазин и заметки по uid/координатам, сохраняя порядок newer
             const storeMap = new Map();
             older.store.forEach(item => storeMap.set(item.uid, item));
             newer.store.forEach(item => storeMap.set(item.uid, item));
@@ -1885,6 +1846,7 @@
                 updatedAt: Math.max(p.updatedAt, s.updatedAt)
             };
 
+            // Сохраняем локальные медиафайлы, если они есть
             if (!result.settings.bgImage && (p.settings.bgImage || s.settings.bgImage)) {
                 result.settings.bgImage = p.settings.bgImage || s.settings.bgImage;
             }
@@ -1904,29 +1866,53 @@
             return null;
         }
 
-        async function fetchCloudDataAsync() {
-            if (!hasCloudStorage) return null;
+        function fetchCloudData(done) {
+            if (!hasCloudStorage) {
+                done(null);
+                return;
+            }
 
-            const metaRes = await getCloudItemPromise(`${STORAGE_KEY}_meta`);
-            if (metaRes.err || !metaRes.val) return null;
+            const keys = [`${STORAGE_KEY}_meta`, STORAGE_KEY];
+            for (let i = 0; i < MAX_CHUNKS; i++) {
+                keys.push(`${STORAGE_KEY}_${i}`);
+            }
 
             try {
-                const meta = JSON.parse(metaRes.val);
-                const count = Math.min(MAX_CHUNKS, meta.chunks || 0);
-                lastSavedChunkCount = count;
-                if (count <= 0) return null;
-
-                let combined = '';
-                for (let i = 0; i < count; i++) {
-                    const partRes = await getCloudItemPromise(`${STORAGE_KEY}_c${i}`);
-                    if (partRes.err || typeof partRes.val !== 'string') {
-                        return null;
+                tg.CloudStorage.getItems(keys, (err, values) => {
+                    if (err || !values) {
+                        done(null);
+                        return;
                     }
-                    combined += partRes.val;
-                }
-                return JSON.parse(combined);
+
+                    try {
+                        if (values[`${STORAGE_KEY}_meta`]) {
+                            const meta = JSON.parse(values[`${STORAGE_KEY}_meta`]);
+                            const count = meta.chunks || 0;
+                            lastSavedChunkCount = count;
+                            let combined = '';
+                            let complete = true;
+                            for (let i = 0; i < count; i++) {
+                                if (typeof values[`${STORAGE_KEY}_${i}`] !== 'string') {
+                                    complete = false;
+                                    break;
+                                }
+                                combined += values[`${STORAGE_KEY}_${i}`];
+                            }
+                            if (complete && combined) {
+                                done(JSON.parse(combined));
+                                return;
+                            }
+                        } else if (values[STORAGE_KEY]) {
+                            done(JSON.parse(values[STORAGE_KEY]));
+                            return;
+                        }
+                    } catch (e) {
+                        console.warn('Ошибка парсинга CloudStorage:', e);
+                    }
+                    done(null);
+                });
             } catch (e) {
-                return null;
+                done(null);
             }
         }
 
@@ -1949,31 +1935,26 @@
             }
             isSyncing = true;
 
-            fetchCloudDataAsync().then((cloudParsed) => {
+            fetchCloudData((cloudParsed) => {
                 isSyncing = false;
-                const timeStr = new Date().toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-
                 if (cloudParsed) {
                     data = mergeDeviceStates(cloudParsed, localParsed);
                     loadMediaFromLocal();
+                    // Обновляем локальный кэш актуальным состоянием
                     try {
                         localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
                     } catch (e) {}
-                    syncStatusText = `Облако: получено в ${timeStr} (обновлено ${new Date(data.updatedAt || Date.now()).toLocaleTimeString('ru-RU')})`;
                     if (showToast) {
                         showNotification('☁️ Данные синхронизированы!', 'success');
                     }
                 } else if (localParsed) {
                     data = normalizeObject(localParsed);
                     loadMediaFromLocal();
-                    syncStatusText = `В облаке пока пусто (${timeStr}), отправляем локальные данные`;
                     saveData(true);
                 } else {
                     loadMediaFromLocal();
-                    syncStatusText = `Новое хранилище готово (${timeStr})`;
                 }
 
-                updateSyncStatusUI();
                 if (callback) callback();
             });
         }
@@ -1993,6 +1974,7 @@
             }, true);
         }
 
+        // ===== ПРИМЕНЕНИЕ НАСТРОЕК =====
         function applySettings() {
             document.getElementById('bgLayer').style.backgroundColor = data.settings.bgColor;
             
@@ -2018,6 +2000,7 @@
             updateMusicVolume();
         }
 
+        // ===== РЕНДЕРИНГ ТАБЛИЦ =====
         function renderTasks() {
             renderTable('tasksBody', data.tasks, 'tasks', false, true);
         }
@@ -2137,6 +2120,7 @@
             }
         }
 
+        // ===== ОБРАБОТЧИКИ ЗАДАНИЙ =====
         function returnTaskFromCompleted(index) {
             if (index >= 0 && index < data.completed.length) {
                 const task = data.completed[index];
@@ -2299,6 +2283,7 @@
             playClickSound();
         }
 
+        // ===== DRAG & DROP =====
         let dragData = null;
 
         function setupDragDrop(tbody, type) {
@@ -2357,6 +2342,7 @@
             });
         }
 
+        // ===== ФУНКЦИИ РАБОТЫ С ЗАДАНИЯМИ =====
         function toggleTask(type, index) {
             const taskList = type === 'tasks' ? data.tasks : data.tempTasks;
             if (!taskList || index >= taskList.length) return;
@@ -2587,6 +2573,7 @@
             showNotification(isEdit ? '✅ Задание обновлено!' : '✅ Задание создано!');
         }
 
+        // ===== МАГАЗИН =====
         function renderStore() {
             const grid = document.getElementById('storeGrid');
             if (!grid) return;
@@ -2725,6 +2712,7 @@
             playClickSound();
         }
 
+        // ===== ЗАМЕТКИ =====
         function renderNotes() {
             const containers = document.querySelectorAll('.notes-container');
             containers.forEach(container => {
@@ -3069,6 +3057,7 @@
             });
         }
 
+        // ===== КОПИЛКА =====
         function togglePiggyOverlay(event) {
             if (event) event.stopPropagation();
             const overlay = document.getElementById('piggyOverlay');
@@ -3234,6 +3223,7 @@
             playClickSound();
         }
 
+        // ===== НАСТРОЙКИ С КРЕСТИКОМ ЗАКРЫТИЯ И СИНХРОНИЗАЦИЕЙ =====
         function openSettings() {
             isSettingsOpen = true;
             const modal = document.getElementById('modal');
@@ -3273,7 +3263,6 @@
                         <button class="modal-close-btn" onclick="closeModal()" title="Закрыть настройки">✕</button>
                     </div>
                 </div>
-                <div class="sync-status-box" id="syncStatusBox">${syncStatusText}</div>
                 
                 <div class="settings-group">
                     <label>Цвет фона:</label>
@@ -3336,6 +3325,7 @@
             modal.classList.add('active');
         }
 
+        // ===== ФУНКЦИИ АВТОСОХРАНЕНИЯ НАСТРОЕК =====
         function updateBgColorFromPicker(value) {
             document.getElementById('bgColorText').value = value;
             data.settings.bgColor = value;
@@ -3542,6 +3532,7 @@
             }
         }
 
+        // ===== ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ =====
         function switchTab(tab) {
             document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
             document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
@@ -3606,6 +3597,7 @@
             isSettingsOpen = false;
         }
 
+        // ===== ИНИЦИАЛИЗАЦИЯ =====
         function init() {
             checkMobile();
 
