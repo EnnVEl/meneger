@@ -1704,8 +1704,14 @@
     </div>
 
     <script>
-        // ===== TELEGRAM CLOUD STORAGE (метод синхронизации) =====
+        // ===== TELEGRAM WEBAPP & CLOUD STORAGE =====
         const tg = window.Telegram?.WebApp;
+        if (tg) {
+            try {
+                tg.ready();
+                tg.expand();
+            } catch (e) {}
+        }
         const hasCloudStorage = !!(tg && tg.CloudStorage);
 
         // ===== ДАННЫЕ =====
@@ -1717,6 +1723,7 @@
             notes: [],
             balance: 0,
             piggyBalance: 0,
+            updatedAt: 0,
             settings: {
                 bgColor: '#2b2b2b',
                 textColor: '#ffffff',
@@ -1883,35 +1890,123 @@
             }
         }
 
-        // ===== СОХРАНЕНИЕ (Telegram CloudStorage + fallback на localStorage) =====
+        // ===== НАДЁЖНОЕ СОХРАНЕНИЕ (Чанки для CloudStorage + localStorage для медиа и кэша) =====
         const STORAGE_KEY = 'taskManagerData';
+        const MEDIA_KEY = 'taskManagerMedia';
+        const CHUNK_SIZE = 3800; // Лимит Telegram CloudStorage — 4096 байт на ключ
+        const MAX_CHUNKS = 15;
 
-        function saveData() {
-            const json = JSON.stringify(data);
+        function buildCloudPayload() {
+            // Исключаем тяжёлые base64-медиафайлы из CloudStorage, чтобы не превышать лимит
+            const clone = JSON.parse(JSON.stringify(data));
+            if (clone.settings) {
+                clone.settings.bgImage = null;
+                clone.settings.customMusic = [];
+            }
+            return JSON.stringify(clone);
+        }
 
-            if (hasCloudStorage) {
-                try {
-                    tg.CloudStorage.setItem(STORAGE_KEY, json, (err) => {
-                        if (err) {
-                            console.warn('CloudStorage save error, fallback to localStorage:', err);
-                            try { localStorage.setItem(STORAGE_KEY, json); } catch (e) {}
-                        }
-                    });
-                } catch (e) {
-                    try { localStorage.setItem(STORAGE_KEY, json); } catch (e2) {}
-                }
-            } else {
-                try {
-                    localStorage.setItem(STORAGE_KEY, json);
-                } catch (e) {}
+        function saveMediaToLocal() {
+            try {
+                const mediaPayload = {
+                    bgImage: data.settings?.bgImage || null,
+                    customMusic: data.settings?.customMusic || []
+                };
+                localStorage.setItem(MEDIA_KEY, JSON.stringify(mediaPayload));
+            } catch (e) {
+                console.warn('Не удалось сохранить медиа в localStorage:', e);
             }
         }
 
-        function applyLoadedData(parsed) {
+        function loadMediaFromLocal() {
+            try {
+                const raw = localStorage.getItem(MEDIA_KEY);
+                if (raw) {
+                    const media = JSON.parse(raw);
+                    if (media.bgImage && !data.settings.bgImage) {
+                        data.settings.bgImage = media.bgImage;
+                    }
+                    if (Array.isArray(media.customMusic) && (!data.settings.customMusic || data.settings.customMusic.length === 0)) {
+                        data.settings.customMusic = media.customMusic;
+                    }
+                }
+            } catch (e) {}
+        }
+
+        let cloudSaveTimer = null;
+        let lastSavedChunkCount = 0;
+
+        function saveData(immediate = false) {
+            data.updatedAt = Date.now();
+
+            // 1. Всегда мгновенно сохраняем в localStorage (синхронно)
+            try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+            } catch (e) {
+                // Если переполнен localStorage из-за картинок/музыки, сохраняем хотя бы основные данные
+                try {
+                    localStorage.setItem(STORAGE_KEY, buildCloudPayload());
+                } catch (e2) {}
+            }
+            saveMediaToLocal();
+
+            // 2. Сохраняем в Telegram CloudStorage с разбиением на чанки
+            if (!hasCloudStorage) return;
+
+            const pushToCloud = () => {
+                try {
+                    const payload = buildCloudPayload();
+                    const chunks = [];
+                    for (let i = 0; i < payload.length; i += CHUNK_SIZE) {
+                        chunks.push(payload.slice(i, i + CHUNK_SIZE));
+                    }
+
+                    // Сохраняем мета-информацию о количестве чанков
+                    tg.CloudStorage.setItem(`${STORAGE_KEY}_meta`, JSON.stringify({
+                        chunks: chunks.length,
+                        updatedAt: data.updatedAt
+                    }));
+
+                    chunks.forEach((chunk, idx) => {
+                        tg.CloudStorage.setItem(`${STORAGE_KEY}_${idx}`, chunk);
+                    });
+
+                    // Удаляем старые лишние чанки, если данные уменьшились
+                    if (lastSavedChunkCount > chunks.length) {
+                        const keysToRemove = [];
+                        for (let i = chunks.length; i < lastSavedChunkCount; i++) {
+                            keysToRemove.push(`${STORAGE_KEY}_${i}`);
+                        }
+                        if (keysToRemove.length > 0) {
+                            tg.CloudStorage.removeItems(keysToRemove);
+                        }
+                    }
+                    lastSavedChunkCount = chunks.length;
+                } catch (e) {
+                    console.warn('CloudStorage save error:', e);
+                }
+            };
+
+            if (immediate) {
+                clearTimeout(cloudSaveTimer);
+                pushToCloud();
+            } else {
+                clearTimeout(cloudSaveTimer);
+                cloudSaveTimer = setTimeout(pushToCloud, 250);
+            }
+        }
+
+        function normalizeData(parsed) {
+            if (!parsed || typeof parsed !== 'object') return;
             data = parsed;
-            if (!data.tempTasks) data.tempTasks = [];
-            if (!data.notes) data.notes = [];
-            if (!data.piggyBalance) data.piggyBalance = 0;
+            if (!Array.isArray(data.tasks)) data.tasks = [];
+            if (!Array.isArray(data.completed)) data.completed = [];
+            if (!Array.isArray(data.store)) data.store = [];
+            if (!Array.isArray(data.tempTasks)) data.tempTasks = [];
+            if (!Array.isArray(data.notes)) data.notes = [];
+            if (typeof data.balance !== 'number') data.balance = 0;
+            if (typeof data.piggyBalance !== 'number') data.piggyBalance = 0;
+            if (typeof data.updatedAt !== 'number') data.updatedAt = 0;
             if (!data.settings) {
                 data.settings = {
                     bgColor: '#2b2b2b',
@@ -1926,45 +2021,96 @@
             if (!data.settings.gradientColors) {
                 data.settings.gradientColors = ['#2b2b2b', '#1a1a2e'];
             }
-            if (!data.settings.musicVolume) {
+            if (typeof data.settings.musicVolume !== 'number') {
                 data.settings.musicVolume = 100;
             }
-            if (!data.settings.customMusic) {
+            if (!Array.isArray(data.settings.customMusic)) {
                 data.settings.customMusic = [];
             }
         }
 
-        function loadData(callback) {
-            if (hasCloudStorage) {
-                tg.CloudStorage.getItem(STORAGE_KEY, (err, value) => {
-                    if (err || !value) {
-                        // Пробуем localStorage как fallback
-                        tryLoadFromLocal(callback);
-                    } else {
-                        try {
-                            const parsed = JSON.parse(value);
-                            applyLoadedData(parsed);
-                        } catch (e) {
-                            tryLoadFromLocal(callback);
-                            return;
-                        }
-                        if (callback) callback();
-                    }
-                });
-            } else {
-                tryLoadFromLocal(callback);
-            }
-        }
-
-        function tryLoadFromLocal(callback) {
+        function readLocalData() {
             try {
                 const saved = localStorage.getItem(STORAGE_KEY);
                 if (saved) {
-                    const parsed = JSON.parse(saved);
-                    applyLoadedData(parsed);
+                    return JSON.parse(saved);
                 }
             } catch (e) {}
-            if (callback) callback();
+            return null;
+        }
+
+        function loadData(callback) {
+            const localParsed = readLocalData();
+
+            if (!hasCloudStorage) {
+                if (localParsed) normalizeData(localParsed);
+                loadMediaFromLocal();
+                if (callback) callback();
+                return;
+            }
+
+            // Запрашиваем метаданные и возможные чанки из CloudStorage
+            const keys = [`${STORAGE_KEY}_meta`, STORAGE_KEY];
+            for (let i = 0; i < MAX_CHUNKS; i++) {
+                keys.push(`${STORAGE_KEY}_${i}`);
+            }
+
+            tg.CloudStorage.getItems(keys, (err, values) => {
+                let cloudParsed = null;
+
+                if (!err && values) {
+                    try {
+                        if (values[`${STORAGE_KEY}_meta`]) {
+                            const meta = JSON.parse(values[`${STORAGE_KEY}_meta`]);
+                            const count = meta.chunks || 0;
+                            lastSavedChunkCount = count;
+                            let combined = '';
+                            let complete = true;
+                            for (let i = 0; i < count; i++) {
+                                if (typeof values[`${STORAGE_KEY}_${i}`] !== 'string') {
+                                    complete = false;
+                                    break;
+                                }
+                                combined += values[`${STORAGE_KEY}_${i}`];
+                            }
+                            if (complete && combined) {
+                                cloudParsed = JSON.parse(combined);
+                            }
+                        } else if (values[STORAGE_KEY]) {
+                            // Обратная совместимость со старым форматом сохранения
+                            cloudParsed = JSON.parse(values[STORAGE_KEY]);
+                        }
+                    } catch (e) {
+                        console.warn('Ошибка чтения CloudStorage:', e);
+                    }
+                }
+
+                // Сравниваем свежесть данных между CloudStorage и localStorage
+                const cloudTime = cloudParsed?.updatedAt || 0;
+                const localTime = localParsed?.updatedAt || 0;
+
+                if (cloudParsed && localParsed) {
+                    if (localTime > cloudTime) {
+                        normalizeData(localParsed);
+                        loadMediaFromLocal();
+                        saveData(true); // Синхронизируем более свежие локальные данные в облако
+                    } else {
+                        normalizeData(cloudParsed);
+                        loadMediaFromLocal();
+                    }
+                } else if (cloudParsed) {
+                    normalizeData(cloudParsed);
+                    loadMediaFromLocal();
+                } else if (localParsed) {
+                    normalizeData(localParsed);
+                    loadMediaFromLocal();
+                    saveData(true);
+                } else {
+                    loadMediaFromLocal();
+                }
+
+                if (callback) callback();
+            });
         }
 
         // ===== ПРИМЕНЕНИЕ НАСТРОЕК =====
@@ -2043,9 +2189,9 @@
                     }
                 } else {
                     const isFailed = task.status === 'failed';
-                    const isCompleted = task.status === true;
+                    const isTaskCompleted = task.status === true;
                     
-                    if (isCompleted) {
+                    if (isTaskCompleted) {
                         statusHtml = `<td><span class="status-checkbox" onclick="uncompleteTask(${index})">✅</span></td>`;
                     } else if (isFailed) {
                         statusHtml = `<td><span class="status-fail-btn" onclick="returnTaskFromCompleted(${index})">✕</span></td>`;
@@ -2085,7 +2231,7 @@
                     <tr ${rowAttrs}>
                         ${dragHandle}
                         ${nameCell}
-                        <td ${isCompleted ? '' : ''}>${rewardDisplay}</td>
+                        <td>${rewardDisplay}</td>
                         ${statusHtml}
                         ${deadlineHtml}
                         ${deleteBtn}
@@ -2123,7 +2269,7 @@
                     status: false
                 });
                 data.completed.splice(index, 1);
-                saveData();
+                saveData(true);
                 updateAll();
                 updateBalance();
                 playClickSound();
@@ -2203,7 +2349,7 @@
                     completedDate: new Date().toISOString()
                 });
                 data.tasks.splice(index, 1);
-                saveData();
+                saveData(true);
                 updateAll();
                 playClickSound();
                 showNotification('😊 Ничего страшного, в следующий раз!');
@@ -2221,7 +2367,7 @@
                     completedDate: new Date().toISOString()
                 });
                 data.tempTasks.splice(index, 1);
-                saveData();
+                saveData(true);
                 updateAll();
                 playClickSound();
                 showNotification('😊 Ничего страшного, в следующий раз!');
@@ -2244,7 +2390,7 @@
                         status: false
                     });
                     data.completed.splice(index, 1);
-                    saveData();
+                    saveData(true);
                     updateAll();
                     updateBalance();
                     playClickSound();
@@ -2267,7 +2413,7 @@
                 data.store.splice(index, 1);
                 showNotification('✅ Задание удалено из магазина!');
             }
-            saveData();
+            saveData(true);
             updateAll();
             playClickSound();
         }
@@ -2322,7 +2468,7 @@
                         if (taskList) {
                             const [moved] = taskList.splice(sourceIndex, 1);
                             taskList.splice(targetIndex, 0, moved);
-                            saveData();
+                            saveData(true);
                             updateAll();
                         }
                     }
@@ -2352,7 +2498,7 @@
                         completedDate: new Date().toISOString()
                     });
                     taskList.splice(index, 1);
-                    saveData();
+                    saveData(true);
                     updateAll();
                     return;
                 }
@@ -2392,7 +2538,7 @@
             data.completed.push({...task, status: true});
             taskList.splice(index, 1);
             
-            saveData();
+            saveData(true);
             updateAll();
             updateBalance();
             playClickSound();
@@ -2436,7 +2582,7 @@
                 data.tasks.unshift({ name, reward, status: false });
             }
             
-            saveData();
+            saveData(true);
             updateAll();
             closeModal();
             playClickSound();
@@ -2493,7 +2639,7 @@
                 task.deadline = deadline;
             }
             
-            saveData();
+            saveData(true);
             updateAll();
             closeModal();
             playClickSound();
@@ -2542,7 +2688,7 @@
                 data.tempTasks.unshift({ name, reward, status: false, deadline });
             }
             
-            saveData();
+            saveData(true);
             updateAll();
             closeModal();
             playClickSound();
@@ -2611,7 +2757,7 @@
             const cost = Math.max(1, parseInt(document.getElementById('storeCost').value) || 1);
             
             data.store.push({ icon, name, cost });
-            saveData();
+            saveData(true);
             renderStore();
             closeModal();
             playClickSound();
@@ -2657,7 +2803,7 @@
             
             if (index >= 0 && index < data.store.length) {
                 data.store[index] = { icon, name, cost };
-                saveData();
+                saveData(true);
                 renderStore();
                 closeModal();
                 playClickSound();
@@ -2675,7 +2821,7 @@
                 status: false
             });
             
-            saveData();
+            saveData(true);
             updateAll();
             showNotification(`📋 Задание "${item.name}" добавлено в список! Выполните его чтобы потратить ${item.cost} баллов.`);
             playClickSound();
@@ -2770,7 +2916,6 @@
                         const clientY = e.clientY || e.touches?.[0]?.clientY || 0;
                         const dx = clientX - startX;
                         const dy = clientY - startY;
-                        const containerRect = container.getBoundingClientRect();
                         const newX = Math.max(0, Math.min(inner.clientWidth - parseInt(div.style.width) || 180, origX + dx));
                         const newY = Math.max(0, Math.min(inner.clientHeight - parseInt(div.style.height) || 120, origY + dy));
                         div.style.left = newX + 'px';
@@ -2789,7 +2934,7 @@
                         if (isDragging) {
                             isDragging = false;
                             div.classList.remove('dragging');
-                            saveData();
+                            saveData(true);
                         }
                     };
                     
@@ -2871,7 +3016,7 @@
                                 isResizing = false;
                                 div.classList.remove('dragging');
                                 document.body.style.userSelect = '';
-                                saveData();
+                                saveData(true);
                             }
                         };
                         
@@ -2922,7 +3067,7 @@
             if (!textarea) return;
             const text = textarea.value;
             data.notes[index].text = text;
-            saveData();
+            saveData(true);
             renderNotes();
             closeModal();
             playClickSound();
@@ -2976,7 +3121,7 @@
             
             data.notes[index].color = rgbaColor;
             data.notes[index].hexColor = color;
-            saveData();
+            saveData(true);
             renderNotes();
             playClickSound();
             showNotification('✅ Цвет заметки обновлен!');
@@ -2991,7 +3136,7 @@
             
             data.notes[index].color = rgbaColor;
             data.notes[index].hexColor = color;
-            saveData();
+            saveData(true);
             renderNotes();
             closeModal();
             playClickSound();
@@ -3012,14 +3157,14 @@
                 color: 'rgba(255,255,255,0.12)',
                 hexColor: '#3c3c3c'
             });
-            saveData();
+            saveData(true);
             renderNotes();
             playClickSound();
         }
 
         function deleteNote(index) {
             data.notes.splice(index, 1);
-            saveData();
+            saveData(true);
             renderNotes();
             playClickSound();
             showNotification('✅ Заметка удалена!');
@@ -3028,7 +3173,7 @@
         function updateNoteText(index, text) {
             if (index < data.notes.length) {
                 data.notes[index].text = text;
-                saveData();
+                saveData(false); // Debounce при вводе текста
             }
         }
 
@@ -3151,7 +3296,7 @@
             
             data.balance -= amount;
             data.piggyBalance += amount;
-            saveData();
+            saveData(true);
             updateBalance();
             updatePiggyBalance();
             closeModal();
@@ -3202,7 +3347,7 @@
             
             data.piggyBalance -= amount;
             data.balance += amount;
-            saveData();
+            saveData(true);
             updateBalance();
             updatePiggyBalance();
             closeModal();
@@ -3237,7 +3382,7 @@
             const amount = data.piggyBalance;
             data.balance += amount;
             data.piggyBalance = 0;
-            saveData();
+            saveData(true);
             updateBalance();
             updatePiggyBalance();
             closeModal();
@@ -3346,7 +3491,7 @@
             document.getElementById('bgColorText').value = value;
             data.settings.bgColor = value;
             applySettings();
-            saveData();
+            saveData(true);
             showNotification('✅ Цвет фона обновлен!');
         }
 
@@ -3355,7 +3500,7 @@
                 document.getElementById('bgColor').value = value;
                 data.settings.bgColor = value;
                 applySettings();
-                saveData();
+                saveData(true);
                 showNotification('✅ Цвет фона обновлен!');
             }
         }
@@ -3364,7 +3509,7 @@
             document.getElementById('textColorText').value = value;
             data.settings.textColor = value;
             applySettings();
-            saveData();
+            saveData(true);
             showNotification('✅ Цвет текста обновлен!');
         }
 
@@ -3373,7 +3518,7 @@
                 document.getElementById('textColor').value = value;
                 data.settings.textColor = value;
                 applySettings();
-                saveData();
+                saveData(true);
                 showNotification('✅ Цвет текста обновлен!');
             }
         }
@@ -3385,7 +3530,7 @@
                     input.value = value;
                     data.settings.gradientColors[index] = value;
                     applySettings();
-                    saveData();
+                    saveData(true);
                     showNotification('✅ Цвет градиента обновлен!');
                 }
             }
@@ -3397,7 +3542,7 @@
                 const textInput = document.querySelectorAll('#gradientColors .color-input-wrapper input[type="text"]')[index];
                 if (textInput) textInput.value = color;
                 applySettings();
-                saveData();
+                saveData(true);
                 showNotification('✅ Цвет градиента обновлен!');
             }
         }
@@ -3405,7 +3550,7 @@
         function addGradientColor() {
             if (!data.settings.gradientColors) data.settings.gradientColors = [];
             data.settings.gradientColors.push('#3c3c3c');
-            saveData();
+            saveData(true);
             openSettings();
             showNotification('✅ Цвет добавлен в градиент!');
         }
@@ -3413,7 +3558,7 @@
         function removeGradientColor(index) {
             if (data.settings.gradientColors.length > 0) {
                 data.settings.gradientColors.splice(index, 1);
-                saveData();
+                saveData(true);
                 openSettings();
                 showNotification('✅ Цвет удален из градиента!');
             }
@@ -3425,14 +3570,14 @@
             const temp = data.settings.gradientColors[index];
             data.settings.gradientColors[index] = data.settings.gradientColors[newIndex];
             data.settings.gradientColors[newIndex] = temp;
-            saveData();
+            saveData(true);
             openSettings();
             showNotification('✅ Порядок цветов изменен!');
         }
 
         function clearGradient() {
             data.settings.gradientColors = [];
-            saveData();
+            saveData(true);
             openSettings();
             showNotification('✅ Градиент очищен!');
         }
@@ -3441,12 +3586,12 @@
             document.getElementById('volumeDisplay').textContent = value + '%';
             data.settings.musicVolume = parseInt(value);
             updateMusicVolume();
-            saveData();
+            saveData(false);
         }
 
         function updateSoundEffects(checked) {
             data.settings.soundEffects = checked;
-            saveData();
+            saveData(true);
             showNotification(checked ? '✅ Звуковые эффекты включены!' : '🔇 Звуковые эффекты выключены!');
         }
 
@@ -3456,7 +3601,7 @@
                 const reader = new FileReader();
                 reader.onload = function(e) {
                     data.settings.bgImage = e.target.result;
-                    saveData();
+                    saveData(true);
                     applySettings();
                     openSettings();
                     playClickSound();
@@ -3468,7 +3613,7 @@
 
         function removeBgImage() {
             data.settings.bgImage = null;
-            saveData();
+            saveData(true);
             applySettings();
             openSettings();
             playClickSound();
@@ -3501,7 +3646,7 @@
                     data: audioData
                 });
                 
-                saveData();
+                saveData(true);
                 showNotification(`✅ Трек "${trackName}" добавлен!`);
                 
                 musicFiles = [];
@@ -3522,7 +3667,7 @@
             if (!data.settings.customMusic || index >= data.settings.customMusic.length) return;
             const trackName = data.settings.customMusic[index].name || 'Без названия';
             data.settings.customMusic.splice(index, 1);
-            saveData();
+            saveData(true);
             showNotification(`🗑️ Трек "${trackName}" удален`);
             
             musicFiles = [];
@@ -3542,6 +3687,7 @@
                     notes: [],
                     balance: 0,
                     piggyBalance: 0,
+                    updatedAt: Date.now(),
                     settings: {
                         bgColor: '#2b2b2b',
                         textColor: '#ffffff',
@@ -3552,7 +3698,8 @@
                         customMusic: []
                     }
                 };
-                saveData();
+                try { localStorage.removeItem(MEDIA_KEY); } catch (e) {}
+                saveData(true);
                 applySettings();
                 updateAll();
                 updateBalance();
@@ -3631,16 +3778,19 @@
             document.getElementById('modal').classList.remove('active');
         }
 
-        function closeContextMenu() {
-            document.getElementById('contextMenu').classList.remove('active');
-            isContextOpen = false;
-        }
-
         // ===== ИНИЦИАЛИЗАЦИЯ =====
         function init() {
             checkMobile();
 
-            // Загрузка данных (асинхронная, т.к. CloudStorage работает через callback)
+            // Мгновенное сохранение при сворачивании/закрытии приложения
+            document.addEventListener('visibilitychange', () => {
+                if (document.visibilityState === 'hidden') {
+                    saveData(true);
+                }
+            });
+            window.addEventListener('pagehide', () => saveData(true));
+            window.addEventListener('beforeunload', () => saveData(true));
+
             loadData(function() {
                 applySettings();
                 updateAll();
